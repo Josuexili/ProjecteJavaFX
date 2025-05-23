@@ -1,5 +1,6 @@
 package com.projecteprogramacio.controller;
 
+import com.projecteprogramacio.AppController;
 import com.projecteprogramacio.MainApp;
 import com.projecteprogramacio.model.User;
 import com.projecteprogramacio.util.Database;
@@ -17,10 +18,10 @@ public class LoginController {
     @FXML private PasswordField passwordField;
     @FXML private Label statusLabel;
 
-    private MainApp mainApp;  // Referència a MainApp
+    private AppController mainApp;  // Referència a MainApp
 
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
+    public void setMainApp(AppController appController) {
+        this.mainApp = appController;
     }
 
     @FXML
