@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.projecteprogramacio.controller.TicketController"
+      spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <TableView fx:id="ticketTable" prefHeight="300" prefWidth="600">
+        <columns>
+            <TableColumn fx:id="colTicketId" text="Ticket ID" prefWidth="80"/>
+            <TableColumn fx:id="colUserId" text="User ID" prefWidth="80"/>
+            <TableColumn fx:id="colTotal" text="Total" prefWidth="80"/>
+            <TableColumn fx:id="colStatus" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="colCreatedAt" text="Created At" prefWidth="130"/>
+            <TableColumn fx:id="colUpdatedAt" text="Updated At" prefWidth="130"/>
+        </columns>
+    </TableView>
+
+    <GridPane hgap="10" vgap="10">
+        <Label text="User ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="userIdField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Total:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="totalField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Status:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="statusField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Created At:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="createdAtField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Updated At:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="updatedAtField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="addButton" text="Add" onAction="#handleAddTicket"/>
+        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"/>
+        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" text="Status messages here" style="-fx-text-fill: red;"/>
+
+</VBox>

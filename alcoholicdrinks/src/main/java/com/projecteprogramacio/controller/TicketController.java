@@ -9,7 +9,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class TicketController {
@@ -25,8 +24,6 @@ public class TicketController {
     @FXML private TextField userIdField;
     @FXML private TextField totalField;
     @FXML private TextField statusField;
-    @FXML private TextField createdAtField;
-    @FXML private TextField updatedAtField;
 
     @FXML private Label statusLabel;
     @FXML private Button addButton;
@@ -63,14 +60,12 @@ public class TicketController {
 
         loadTickets();
 
-        // Quan es selecciona una fila, carregar la info als camps
+        // Quan es selecciona una fila, carregar la info als camps (excloent createdAt i updatedAt)
         ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 userIdField.setText(String.valueOf(newSelection.getUserId()));
                 totalField.setText(String.valueOf(newSelection.getTotal()));
                 statusField.setText(newSelection.getStatus());
-                createdAtField.setText(newSelection.getCreatedAt());
-                updatedAtField.setText(newSelection.getUpdatedAt());
             }
         });
     }
@@ -88,10 +83,8 @@ public class TicketController {
             int userId = Integer.parseInt(userIdField.getText());
             double total = Double.parseDouble(totalField.getText());
             String status = statusField.getText();
-            String createdAt = createdAtField.getText();
-            String updatedAt = updatedAtField.getText();
 
-            Ticket newTicket = new Ticket(0, userId, total, status, createdAt, updatedAt);
+            Ticket newTicket = new Ticket(0, userId, total, status, null, null);
 
             boolean inserted = ticketDAO.insertTicket(newTicket);
             if (inserted) {
@@ -118,10 +111,9 @@ public class TicketController {
             int userId = Integer.parseInt(userIdField.getText());
             double total = Double.parseDouble(totalField.getText());
             String status = statusField.getText();
-            String createdAt = createdAtField.getText();
-            String updatedAt = updatedAtField.getText();
 
-            Ticket updatedTicket = new Ticket(selectedTicket.getTicketId(), userId, total, status, createdAt, updatedAt);
+            // No posem createdAt ni updatedAt aquí
+            Ticket updatedTicket = new Ticket(selectedTicket.getTicketId(), userId, total, status, null, null);
 
             boolean updated = ticketDAO.updateTicket(updatedTicket);
             if (updated) {
@@ -158,7 +150,6 @@ public class TicketController {
         userIdField.clear();
         totalField.clear();
         statusField.clear();
-        createdAtField.clear();
-        updatedAtField.clear();
     }
 }
+

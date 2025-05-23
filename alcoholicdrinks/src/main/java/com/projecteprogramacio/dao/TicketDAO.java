@@ -1,18 +1,23 @@
 package com.projecteprogramacio.dao;
 
-
 import com.projecteprogramacio.model.Ticket;
 import com.projecteprogramacio.util.Database;
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TicketDAO {
 
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     // Inserir nou tiquet
     public boolean insertTicket(Ticket ticket) {
         String sql = "INSERT INTO tickets (user_id, total, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
+
+        String now = LocalDateTime.now().format(formatter);
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -20,8 +25,10 @@ public class TicketDAO {
             stmt.setInt(1, ticket.getUserId());
             stmt.setDouble(2, ticket.getTotal());
             stmt.setString(3, ticket.getStatus());
-            stmt.setString(4, ticket.getCreatedAt());
-            stmt.setString(5, ticket.getUpdatedAt());
+
+            // Dates automàtiques
+            stmt.setString(4, now);
+            stmt.setString(5, now);
 
             return stmt.executeUpdate() > 0;
 
@@ -90,7 +97,9 @@ public class TicketDAO {
 
     // Actualitzar un tiquet
     public boolean updateTicket(Ticket ticket) {
-        String sql = "UPDATE tickets SET user_id = ?, total = ?, status = ?, created_at = ?, updated_at = ? WHERE ticket_id = ?";
+        String sql = "UPDATE tickets SET user_id = ?, total = ?, status = ?, updated_at = ? WHERE ticket_id = ?";
+
+        String now = LocalDateTime.now().format(formatter);
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -98,9 +107,11 @@ public class TicketDAO {
             stmt.setInt(1, ticket.getUserId());
             stmt.setDouble(2, ticket.getTotal());
             stmt.setString(3, ticket.getStatus());
-            stmt.setString(4, ticket.getCreatedAt());
-            stmt.setString(5, ticket.getUpdatedAt());
-            stmt.setInt(6, ticket.getTicketId());
+
+            // updated_at automàtic
+            stmt.setString(4, now);
+
+            stmt.setInt(5, ticket.getTicketId());
 
             return stmt.executeUpdate() > 0;
 
@@ -126,3 +137,4 @@ public class TicketDAO {
         }
     }
 }
+

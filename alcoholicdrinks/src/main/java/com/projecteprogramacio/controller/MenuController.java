@@ -27,6 +27,10 @@ public class MenuController {
         MenuItem menuDrinks = new MenuItem("Drinks");
         menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
         menuView.getItems().add(menuDrinks);
+        
+        MenuItem menuTickets = new MenuItem("Tickets");
+        menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
+        menuView.getItems().add(menuTickets);
 
         if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
             MenuItem menuUsers = new MenuItem("Users");
