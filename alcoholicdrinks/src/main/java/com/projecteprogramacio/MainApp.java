@@ -6,17 +6,12 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
 public class MainApp extends Application {
 
-    private BorderPane rootLayout;
     private Stage primaryStage;
     private User loggedUser;
 
@@ -26,86 +21,41 @@ public class MainApp extends Application {
         showLoginView();
     }
 
-    // Mostra la finestra de login
     private void showLoginView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
-            Parent loginView = loader.load();
+            Parent root = loader.load();
 
+            // Obtenim controller i li passem MainApp perquè pugui avisar quan login és correcte
             LoginController controller = loader.getController();
-            controller.setMainApp(this);  // Passem referència per comunicar
+            controller.setMainApp(this);
 
-            Scene scene = new Scene(loginView, 400, 300);
+            Scene scene = new Scene(root, 400, 300);
             primaryStage.setTitle("Login");
             primaryStage.setScene(scene);
             primaryStage.show();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // Mètode que crida el LoginController quan l'usuari ha fet login correctament
+    // Cridem quan login és correcte, passem l'usuari
     public void setLoggedUser(User user) {
         this.loggedUser = user;
-        showMainMenu();
+        showUserView();
     }
 
-    // Mostra la finestra principal amb el menú segons el rol
-    public void showMainMenu() {
-        rootLayout = new BorderPane();
-
-        MenuBar menuBar = new MenuBar();
-        Menu menuView = new Menu("Vistes");
-
-        // Elements comuns del menú
-        MenuItem menuTicketItems = new MenuItem("Ticket Items");
-        menuTicketItems.setOnAction(e -> loadView("/view/TicketItemView.fxml"));
-
-        MenuItem menuDrinks = new MenuItem("Drinks");
-        menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
-
-        MenuItem menuDrinkTypes = new MenuItem("Drink Types");
-        menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
-
-        MenuItem menuTickets = new MenuItem("Tickets");
-        menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
-
-        menuView.getItems().addAll(menuTicketItems, menuDrinks, menuDrinkTypes, menuTickets);
-
-        // Menú addicional només per admin
-        if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
-            MenuItem menuUsers = new MenuItem("Users");
-            menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
-
-            MenuItem menuBrands = new MenuItem("Brands");
-            menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
-
-            MenuItem menuCountries = new MenuItem("Countries");
-            menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
-            
-            MenuItem menuSales = new MenuItem("Sales");
-            menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
-
-            menuView.getItems().addAll(menuUsers, menuBrands, menuCountries, menuSales);
-        }
-
-        menuBar.getMenus().add(menuView);
-        rootLayout.setTop(menuBar);
-
-        // Carregar vista inicial
-        loadView("/view/TicketItemView.fxml");
-
-        Scene scene = new Scene(rootLayout, 800, 600);
-        primaryStage.setTitle("Alcoholic Drinks Management");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
-
-    // Carrega un FXML al centre del BorderPane
-    private void loadView(String fxmlPath) {
+    private void showUserView() {
         try {
-            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
-            rootLayout.setCenter(view);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UserView.fxml"));
+            Parent root = loader.load();
+
+            Scene scene = new Scene(root, 800, 600);
+            primaryStage.setTitle("Users Management");
+            primaryStage.setScene(scene);
+            primaryStage.show();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -115,3 +65,4 @@ public class MainApp extends Application {
         launch(args);
     }
 }
+
