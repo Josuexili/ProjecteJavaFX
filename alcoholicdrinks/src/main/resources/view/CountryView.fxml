@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.projecteprogramacio.controller.CountryController"
+      spacing="10">
+      
+      <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Taula de països -->
+    <TableView fx:id="countryTable" prefHeight="300" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colCode" text="Country Code" prefWidth="150"/>
+            <TableColumn fx:id="colName" text="Name" prefWidth="300"/>
+        </columns>
+    </TableView>
+
+    <!-- Formulari per codi i nom -->
+    <GridPane hgap="10" vgap="10">
+        <Label text="Country Code:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="codeField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Name:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <!-- Botons per gestionar -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Add" onAction="#handleAddCountry"/>
+        <Button text="Update" onAction="#handleUpdateCountry"/>
+        <Button text="Delete" onAction="#handleDeleteCountry"/>
+    </HBox>
+
+    <!-- Label d'estat -->
+    <Label fx:id="statusLabel" style="-fx-text-fill: red;"/>
+
+</VBox>

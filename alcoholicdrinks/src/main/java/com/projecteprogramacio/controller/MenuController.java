@@ -27,10 +27,24 @@ public class MenuController {
         MenuItem menuDrinks = new MenuItem("Drinks");
         menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
         menuView.getItems().add(menuDrinks);
-        
+
         MenuItem menuTickets = new MenuItem("Tickets");
         menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
         menuView.getItems().add(menuTickets);
+
+        MenuItem menuDrinkTypes = new MenuItem("Drink Types");
+        menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
+        menuView.getItems().add(menuDrinkTypes);
+
+        // Nova vista: Country
+        MenuItem menuCountries = new MenuItem("Countries");
+        menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
+        menuView.getItems().add(menuCountries);
+
+        // Nova vista: Brand
+        MenuItem menuBrands = new MenuItem("Brands");
+        menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
+        menuView.getItems().add(menuBrands);
 
         if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
             MenuItem menuUsers = new MenuItem("Users");
@@ -51,3 +65,4 @@ public class MenuController {
         }
     }
 }
+
