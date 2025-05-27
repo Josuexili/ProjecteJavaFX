@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+
+<VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.projecteprogramacio.controller.TicketItemController"
+      spacing="10">
+    
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Resta del codi -->
+
+
+
+
+
+
+    <TableView fx:id="ticketItemTable" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="colItemId" text="Item ID" prefWidth="75"/>
+            <TableColumn fx:id="colTicketId" text="Ticket ID" prefWidth="75"/>
+            <TableColumn fx:id="colDrinkId" text="Drink ID" prefWidth="75"/>
+            <TableColumn fx:id="colQuantity" text="Quantity" prefWidth="75"/>
+            <TableColumn fx:id="colPrice" text="Price" prefWidth="75"/>
+        </columns>
+    </TableView>
+
+    <GridPane hgap="10" vgap="10">
+        <Label text="Ticket ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtTicketId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Drink ID:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtDrinkId" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Quantity:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtQuantity" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Price:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtPrice" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnAdd" text="Add" onAction="#handleAdd"/>
+        <Button fx:id="btnUpdate" text="Update" onAction="#handleUpdate"/>
+        <Button fx:id="btnDelete" text="Delete" onAction="#handleDelete"/>
+    </HBox>
+
+</VBox>

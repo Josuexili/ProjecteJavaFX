@@ -31,6 +31,10 @@ public class MenuController {
         menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
         menuView.getItems().add(menuTickets);
 
+        MenuItem menuTicketItems = new MenuItem("Ticket Items"); 
+        menuTicketItems.setOnAction(e -> loadView("/view/TicketItemView.fxml"));
+        menuView.getItems().add(menuTicketItems);
+
         MenuItem menuDrinkTypes = new MenuItem("Drink Types");
         menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
         menuView.getItems().add(menuDrinkTypes);
@@ -43,7 +47,6 @@ public class MenuController {
         menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
         menuView.getItems().add(menuBrands);
 
-        // Nova vista: Sales
         MenuItem menuSales = new MenuItem("Sales");
         menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
         menuView.getItems().add(menuSales);
