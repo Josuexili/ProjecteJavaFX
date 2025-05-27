@@ -14,23 +14,40 @@ import java.util.List;
 
 public class UserController {
 
-    @FXML private TableView<User> userTable;
-    @FXML private TableColumn<User, Integer> colUserId;
-    @FXML private TableColumn<User, String> colUsername;
-    @FXML private TableColumn<User, String> colEmail;
-    @FXML private TableColumn<User, String> colRole;
+    @FXML
+    private TableView<User> userTable;
+    @FXML
+    private TableColumn<User, Integer> colUserId;
+    @FXML
+    private TableColumn<User, String> colUsername;
+    @FXML
+    private TableColumn<User, String> colEmail;
+    @FXML
+    private TableColumn<User, String> colRole;
 
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private TextField emailField;
-    @FXML private TextField roleField;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private TextField roleField;
 
-    @FXML private Label statusLabel;
-    @FXML private Button addButton;
-    @FXML private Button deleteButton;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private Button addButton;
+    @FXML
+    private Button updateButton;
+    @FXML
+    private Button deleteButton;
 
     private ObservableList<User> userList;
     private UserDAO userDAO;
+
+    // Guardem la contrasenya real temporalment per evitar mostrar-la
+    private String currentPassword = "";
 
     @FXML
     public void initialize() {
@@ -45,14 +62,37 @@ public class UserController {
         }
 
         // Configura les columnes
-        colUserId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
+        colUserId.setCellValueFactory(
+                cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId())
+                        .asObject());
 
-        colUsername.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUsername()));
-        colEmail.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getEmail()));
-        colRole.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRole()));
+        colUsername.setCellValueFactory(
+                cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUsername()));
+        colEmail.setCellValueFactory(
+                cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getEmail()));
+        colRole.setCellValueFactory(
+                cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRole()));
+
+        // Listener per actualitzar els camps quan es selecciona un usuari a la taula
+        userTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                populateFields(newSelection);
+            } else {
+                clearInputFields();
+            }
+        });
 
         loadUsers();
     }
+
+    // Mètode per omplir els camps de text amb l'usuari seleccionat
+    private void populateFields(User user) {
+        usernameField.setText(user.getUsername());
+        passwordField.clear();  // No posem res, per seguretat
+        emailField.setText(user.getEmail());
+        roleField.setText(user.getRole());
+    }
+
 
     private void loadUsers() {
         try {
@@ -78,7 +118,8 @@ public class UserController {
             return;
         }
 
-        // Per simplificar, utilitzem el mateix temps per created_at, last_login, last_logout
+        // Per simplificar, utilitzem el mateix temps per created_at, last_login,
+        // last_logout
         String now = java.time.LocalDateTime.now().toString();
 
         User newUser = new User(0, username, password, email, now, now, now, role);
@@ -91,6 +132,49 @@ public class UserController {
                 loadUsers();
             } else {
                 statusLabel.setText("Error afegint usuari.");
+            }
+        } catch (SQLException e) {
+            statusLabel.setText("Error BBDD: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleUpdateUser() {
+        User selectedUser = userTable.getSelectionModel().getSelectedItem();
+        if (selectedUser == null) {
+            statusLabel.setText("Selecciona un usuari per editar.");
+            return;
+        }
+
+        String username = usernameField.getText().trim();
+        String password = passwordField.getText().trim();
+        String email = emailField.getText().trim();
+        String role = roleField.getText().trim();
+
+        if (username.isEmpty() || email.isEmpty() || role.isEmpty()) {
+            statusLabel.setText("Omple tots els camps requerits (excepte password si no canvies).");
+            return;
+        }
+
+        selectedUser.setUsername(username);
+        selectedUser.setEmail(email);
+        selectedUser.setRole(role);
+
+        if (!password.isEmpty()) {
+            selectedUser.setPassword(password); // només actualitza la contrasenya si s'ha introduït
+        } else {
+            selectedUser.setPassword(currentPassword); // manté la contrasenya anterior si el camp és buit
+        }
+
+        try {
+            boolean updated = userDAO.updateUser(selectedUser);
+            if (updated) {
+                statusLabel.setText("Usuari actualitzat correctament.");
+                clearInputFields();
+                loadUsers();
+            } else {
+                statusLabel.setText("Error actualitzant usuari.");
             }
         } catch (SQLException e) {
             statusLabel.setText("Error BBDD: " + e.getMessage());
@@ -125,6 +209,8 @@ public class UserController {
         passwordField.clear();
         emailField.clear();
         roleField.clear();
+        currentPassword = "";
+        userTable.getSelectionModel().clearSelection();
     }
 }
 

@@ -1,7 +1,7 @@
 package com.projecteprogramacio.dao;
 
-
 import com.projecteprogramacio.model.User;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class UserDAO {
     public boolean createUser(User user) throws SQLException {
         String sql = "INSERT INTO users (username, password, email, created_at, last_login, last_logout, role) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPassword());
             pstmt.setString(3, user.getEmail());
@@ -28,7 +28,19 @@ public class UserDAO {
             pstmt.setString(7, user.getRole());
 
             int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
+
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            // Opcional: obtenir ID generat i posar-lo al model
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    user.setUserId(generatedKeys.getInt(1));
+                }
+            }
+
+            return true;
         }
     }
 
@@ -37,6 +49,19 @@ public class UserDAO {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+            return null;
+        }
+    }
+
+    // Obtenir un usuari per username (molt útil per login)
+    public User getUserByUsername(String username) throws SQLException {
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return mapResultSetToUser(rs);
@@ -100,4 +125,18 @@ public class UserDAO {
             rs.getString("role")
         );
     }
+    public List<User> searchUsersByName(String nameFilter) throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE username LIKE ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + nameFilter + "%");
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+        }
+        return users;
+    }
+
 }

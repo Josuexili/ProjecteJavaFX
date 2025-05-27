@@ -37,7 +37,7 @@ public class TicketController {
     public void initialize() {
         try {
             Connection conn = Database.getConnection();
-            ticketDAO = new TicketDAO();
+            ticketDAO = new TicketDAO(conn);
         } catch (Exception e) {
             statusLabel.setText("Error en la connexió a la BBDD");
             e.printStackTrace();

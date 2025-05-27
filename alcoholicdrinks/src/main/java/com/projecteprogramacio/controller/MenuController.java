@@ -24,6 +24,7 @@ public class MenuController {
         MenuBar menuBar = new MenuBar();
         Menu menuView = new Menu("Vistes");
 
+        // Els menus que ja tens
         MenuItem menuDrinks = new MenuItem("Drinks");
         menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
         menuView.getItems().add(menuDrinks);
@@ -36,25 +37,33 @@ public class MenuController {
         menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
         menuView.getItems().add(menuDrinkTypes);
 
-        // Nova vista: Country
+        // Nous menús existents
         MenuItem menuCountries = new MenuItem("Countries");
         menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
         menuView.getItems().add(menuCountries);
 
-        // Nova vista: Brand
         MenuItem menuBrands = new MenuItem("Brands");
         menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
         menuView.getItems().add(menuBrands);
 
+        // Admin només: Usuaris
         if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
             MenuItem menuUsers = new MenuItem("Users");
             menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
             menuView.getItems().add(menuUsers);
         }
 
+        // Worker només: Crear tiquets
+        if ("worker".equalsIgnoreCase(loggedUser.getRole())) {
+            MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
+            menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+            menuView.getItems().add(menuCreateTicket);
+        }
+
         menuBar.getMenus().add(menuView);
         return menuBar;
     }
+
 
     private void loadView(String fxmlPath) {
         try {

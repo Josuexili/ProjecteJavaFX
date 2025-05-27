@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.projecteprogramacio.controller.CreateTicketController"
+      spacing="10">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Camp cerca clients -->
+    <Label text="Cerca clients:"/>
+    <TextField fx:id="clientSearchField" promptText="Escriu nom client..."/>
+
+    <!-- Llista clients -->
+    <ListView fx:id="clientListView" prefHeight="150" prefWidth="400"/>
+
+    <!-- Label client seleccionat -->
+    <Label fx:id="selectedClientLabel" text="Cap client seleccionat" style="-fx-font-weight: bold;"/>
+
+    <!-- Cerca productes -->
+    <Label text="Cerca begudes:"/>
+    <TextField fx:id="productSearchField" promptText="Escriu nom producte..."/>
+
+    <!-- Taula productes -->
+    <TableView fx:id="productTable" prefHeight="200" prefWidth="500">
+        <columns>
+            <TableColumn fx:id="colProductName" text="Nom" prefWidth="200"/>
+            <TableColumn fx:id="colProductPrice" text="Preu (€)" prefWidth="100"/>
+            <TableColumn fx:id="colProductQuantity" text="Quantitat" prefWidth="100"/>
+            <TableColumn fx:id="colAddButton" text="Afegir" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <!-- Taula línies tiquet -->
+    <Label text="Línies del tiquet:"/>
+    <TableView fx:id="ticketLineTable" prefHeight="200" prefWidth="500">
+        <columns>
+            <TableColumn fx:id="colLineProduct" text="Producte" prefWidth="200"/>
+            <TableColumn fx:id="colLineQuantity" text="Quantitat" prefWidth="100"/>
+            <TableColumn fx:id="colLineUnitPrice" text="Preu unitari" prefWidth="100"/>
+            <TableColumn fx:id="colLineSubtotal" text="Subtotal" prefWidth="100"/>
+            <TableColumn fx:id="colLineDeleteButton" text="Eliminar" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <!-- Total i botó finalitzar -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Label fx:id="totalLabel" text="Total: 0.00 €" style="-fx-font-weight: bold;"/>
+        <Button fx:id="finishTicketButton" text="Finalitzar ticket"/>
+    </HBox>
+
+</VBox>
+

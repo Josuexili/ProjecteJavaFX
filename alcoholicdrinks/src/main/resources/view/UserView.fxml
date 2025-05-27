@@ -37,6 +37,7 @@
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
         <Button fx:id="addButton" text="Add" onAction="#handleAddUser"/>
+        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateUser"/>
         <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteUser"/>
     </HBox>
 

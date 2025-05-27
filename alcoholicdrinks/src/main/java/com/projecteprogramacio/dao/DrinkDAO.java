@@ -124,4 +124,24 @@ public class DrinkDAO {
             rs.getBytes("image")
         );
     }
+    public static List<Drink> searchDrinksByName(String nameFilter) {
+        List<Drink> drinks = new ArrayList<>();
+        String sql = "SELECT * FROM drinks WHERE name LIKE ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + nameFilter + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                drinks.add(extractDrinkFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return drinks;
+    }
+
 }

@@ -1,11 +1,12 @@
 package com.projecteprogramacio.controller;
 
 import com.projecteprogramacio.AppController;
-import com.projecteprogramacio.MainApp;
 import com.projecteprogramacio.model.User;
 import com.projecteprogramacio.util.Database;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.sql.Connection;
@@ -29,13 +30,17 @@ public class LoginController {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            statusLabel.setText("Introdueix usuari i contrasenya.");
+        if (username.isEmpty()) {
+            statusLabel.setText("Introdueix un nom d’usuari.");
+            return;
+        }
+        if (password.isEmpty()) {
+            statusLabel.setText("Introdueix la contrasenya.");
             return;
         }
 
         try (Connection conn = Database.getConnection()) {
-            String sql = "SELECT password, role FROM users WHERE username = ?";
+            String sql = "SELECT user_id, password, role FROM users WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
@@ -44,24 +49,27 @@ public class LoginController {
                 String storedPassword = rs.getString("password");
                 String role = rs.getString("role");
 
-                // Nota: Aquí assumeixes contrasenyes en text pla. Afegir hashing per producció.
-                if (password.equals(storedPassword)) {
-                    User user = new User();
-                    user.setUsername(username);
-                    user.setRole(role);
-
-                    statusLabel.setText("Benvingut, " + username + " (" + role + ")");
-
-                    // Tanquem finestra login
-                    Stage stage = (Stage) usernameField.getScene().getWindow();
-                    stage.close();
-
-                    // Avisem MainApp que login ha estat correcte
-                    mainApp.setLoggedUser(user);
-
-                } else {
+                // Compara la contrasenya introduïda amb la de la BBDD
+                if (!password.equals(storedPassword)) {
                     statusLabel.setText("Contrasenya incorrecta.");
+                    return;
                 }
+
+                // Login correcte
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setUsername(username);
+                user.setRole(role);
+
+                statusLabel.setText("Benvingut, " + username + " (" + role + ")");
+
+                // Tanquem la finestra de login
+                Stage stage = (Stage) usernameField.getScene().getWindow();
+                stage.close();
+
+                // Passem l'usuari loguejat a l'app principal
+                mainApp.setLoggedUser(user);
+
             } else {
                 statusLabel.setText("Usuari no trobat.");
             }
@@ -72,3 +80,4 @@ public class LoginController {
         }
     }
 }
+

@@ -1,5 +1,7 @@
 package com.projecteprogramacio.model;
 
+import java.util.ArrayList;
+import java.util.List;
 
 public class Ticket {
     private int ticketId;
@@ -9,6 +11,9 @@ public class Ticket {
     private String createdAt;
     private String updatedAt;
 
+    private List<TicketLine> lines = new ArrayList<>();
+
+    // Constructors
     public Ticket() {}
 
     public Ticket(int ticketId, int userId, double total, String status, String createdAt, String updatedAt) {
@@ -20,6 +25,7 @@ public class Ticket {
         this.updatedAt = updatedAt;
     }
 
+    // Getters i Setters
     public int getTicketId() {
         return ticketId;
     }
@@ -67,4 +73,43 @@ public class Ticket {
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    // Gestionar línies de tiquet
+    public List<TicketLine> getLines() {
+        return lines;
+    }
+
+    public void setLines(List<TicketLine> lines) {
+        this.lines = lines;
+        recalculateTotal(); // recalcula el total si es canvien totes les línies
+    }
+
+    public void addLine(TicketLine line) {
+        line.setTicketId(this.ticketId); // assigna el ticketId
+        lines.add(line);
+        recalculateTotal();
+    }
+
+    public void removeLine(TicketLine line) {
+        lines.remove(line);
+        recalculateTotal();
+    }
+
+    public void clearLines() {
+        lines.clear();
+        recalculateTotal();
+    }
+
+    // Recalcular el total
+    public void recalculateTotal() {
+        total = lines.stream()
+                .mapToDouble(TicketLine::getSubtotal)
+                .sum();
+    }
+
+    @Override
+    public String toString() {
+        return "Ticket #" + ticketId + " - " + status + " - Total: " + String.format("%.2f€", total);
+    }
 }
+

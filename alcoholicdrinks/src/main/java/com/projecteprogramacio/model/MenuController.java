@@ -23,43 +23,60 @@ public class MenuController {
         MenuBar menuBar = new MenuBar();
         Menu menuView = new Menu("Vistes");
 
-        MenuItem menuDrinks = new MenuItem("Drinks");
-        menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
-        menuView.getItems().add(menuDrinks);
+        String role = loggedUser.getRole().toLowerCase();
 
-        MenuItem menuTickets = new MenuItem("Tickets");
-        menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
-        menuView.getItems().add(menuTickets);
+        if ("admin".equals(role)) {
+            // Admin pot veure tot menys CreateTicket s'ha de carregar TicketCreation.fxml
+            MenuItem menuDrinks = new MenuItem("Drinks");
+            menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
+            menuView.getItems().add(menuDrinks);
 
-        MenuItem menuTicketItems = new MenuItem("Ticket Items"); 
-        menuTicketItems.setOnAction(e -> loadView("/view/TicketItemView.fxml"));
-        menuView.getItems().add(menuTicketItems);
+            MenuItem menuTickets = new MenuItem("Tickets");
+            menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
+            menuView.getItems().add(menuTickets);
 
-        MenuItem menuDrinkTypes = new MenuItem("Drink Types");
-        menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
-        menuView.getItems().add(menuDrinkTypes);
+            MenuItem menuTicketItems = new MenuItem("Ticket Items");
+            menuTicketItems.setOnAction(e -> loadView("/view/TicketItemView.fxml"));
+            menuView.getItems().add(menuTicketItems);
 
-        MenuItem menuCountries = new MenuItem("Countries");
-        menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
-        menuView.getItems().add(menuCountries);
+            MenuItem menuDrinkTypes = new MenuItem("Drink Types");
+            menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
+            menuView.getItems().add(menuDrinkTypes);
 
-        MenuItem menuBrands = new MenuItem("Brands");
-        menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
-        menuView.getItems().add(menuBrands);
+            MenuItem menuCountries = new MenuItem("Countries");
+            menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
+            menuView.getItems().add(menuCountries);
 
-        MenuItem menuSales = new MenuItem("Sales");
-        menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
-        menuView.getItems().add(menuSales);
+            MenuItem menuBrands = new MenuItem("Brands");
+            menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
+            menuView.getItems().add(menuBrands);
 
-        if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
+            MenuItem menuSales = new MenuItem("Sales");
+            menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
+            menuView.getItems().add(menuSales);
+
+            MenuItem menuCreateTicket = new MenuItem("Create Ticket");
+            menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+            menuView.getItems().add(menuCreateTicket);
+
             MenuItem menuUsers = new MenuItem("Users");
             menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
             menuView.getItems().add(menuUsers);
+
+        } else if ("worker".equals(role)) {
+            MenuItem menuCreateTicket = new MenuItem("Create Ticket");
+            menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+            menuView.getItems().add(menuCreateTicket);
+
+        } else if ("client".equals(role)) {
+            // client no veu cap opció
         }
 
         menuBar.getMenus().add(menuView);
         return menuBar;
     }
+
+
 
     private void loadView(String fxmlPath) {
         try {
