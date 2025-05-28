@@ -2,12 +2,15 @@ package com.projecteprogramacio.controller;
 
 import com.projecteprogramacio.dao.DrinkDAO;
 import com.projecteprogramacio.model.Drink;
+import com.projecteprogramacio.util.Database;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.beans.property.*;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class DrinkController {
@@ -38,9 +41,19 @@ public class DrinkController {
     @FXML private Label statusLabel;
 
     private ObservableList<Drink> drinkList;
+    private DrinkDAO drinkDAO;
 
     @FXML
     public void initialize() {
+        Connection conn = null;
+		try {
+			conn = Database.getConnection();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // Assegura’t que la classe Database funciona correctament
+        drinkDAO = new DrinkDAO(conn);
+
         colId.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getDrinkId()).asObject());
         colName.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
         colAlcohol.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getAlcoholContent()).asObject());
@@ -59,7 +72,7 @@ public class DrinkController {
     }
 
     private void loadDrinks() {
-        List<Drink> drinks = DrinkDAO.getAllDrinks();
+        List<Drink> drinks = drinkDAO.getAllDrinks();
         drinkList = FXCollections.observableArrayList(drinks);
         drinkTable.setItems(drinkList);
     }
@@ -97,7 +110,8 @@ public class DrinkController {
             drink.setCountryCode(countryField.getText().trim().toUpperCase());
             drink.setImage(null);
 
-            boolean inserted = DrinkDAO.insertDrink(drink);
+            boolean inserted = drinkDAO.insertDrink(drink);
+
             if (inserted) {
                 statusLabel.setText("Beguda afegida correctament.");
                 clearForm();
@@ -105,8 +119,10 @@ public class DrinkController {
             } else {
                 statusLabel.setText("Error en afegir la beguda.");
             }
+        } catch (NumberFormatException e) {
+            statusLabel.setText("Error: comprova els valors numèrics.");
         } catch (Exception e) {
-            statusLabel.setText("Error: " + e.getMessage());
+            statusLabel.setText("Error inesperat: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -129,12 +145,18 @@ public class DrinkController {
             selected.setBrandId(Integer.parseInt(brandField.getText().trim()));
             selected.setCountryCode(countryField.getText().trim().toUpperCase());
 
-            DrinkDAO.updateDrink(selected);
-            statusLabel.setText("Beguda actualitzada correctament.");
-            clearForm();
-            loadDrinks();
+            boolean updated = drinkDAO.updateDrink(selected);
+            if (updated) {
+                statusLabel.setText("Beguda actualitzada correctament.");
+                clearForm();
+                loadDrinks();
+            } else {
+                statusLabel.setText("Error en actualitzar la beguda.");
+            }
+        } catch (NumberFormatException e) {
+            statusLabel.setText("Error: comprova els valors numèrics.");
         } catch (Exception e) {
-            statusLabel.setText("Error: " + e.getMessage());
+            statusLabel.setText("Error inesperat: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -147,10 +169,14 @@ public class DrinkController {
             return;
         }
 
-        DrinkDAO.deleteDrink(selected.getDrinkId());
-        statusLabel.setText("Beguda esborrada correctament.");
-        clearForm();
-        loadDrinks();
+        boolean deleted = drinkDAO.deleteDrink(selected.getDrinkId());
+        if (deleted) {
+            statusLabel.setText("Beguda esborrada correctament.");
+            clearForm();
+            loadDrinks();
+        } else {
+            statusLabel.setText("Error en esborrar la beguda.");
+        }
     }
 
     private void clearForm() {
@@ -164,3 +190,4 @@ public class DrinkController {
         countryField.clear();
     }
 }
+

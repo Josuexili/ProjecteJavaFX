@@ -44,6 +44,7 @@
         <Button fx:id="addButton" text="Add" onAction="#handleAddTicket"/>
         <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"/>
         <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"/>
+        
     </HBox>
 
     <Label fx:id="statusLabel" text="Status messages here" style="-fx-text-fill: red;"/>

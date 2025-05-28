@@ -12,66 +12,68 @@ import java.io.IOException;
 
 public class MenuController {
 
-    private final User loggedUser;
-    private final BorderPane rootLayout;
+	private final User loggedUser;
+	private final BorderPane rootLayout;
 
-    public MenuController(User loggedUser, BorderPane rootLayout) {
-        this.loggedUser = loggedUser;
-        this.rootLayout = rootLayout;
-    }
+	public MenuController(User loggedUser, BorderPane rootLayout) {
+		this.loggedUser = loggedUser;
+		this.rootLayout = rootLayout;
+	}
 
-    public MenuBar createMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        Menu menuView = new Menu("Vistes");
+	public MenuBar createMenuBar() {
+		MenuBar menuBar = new MenuBar();
+		Menu menuView = new Menu("Vistes");
 
-        // Els menus que ja tens
-        MenuItem menuDrinks = new MenuItem("Drinks");
-        menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
-        menuView.getItems().add(menuDrinks);
+		if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
+			// L'admin veu tot
+			MenuItem menuDrinks = new MenuItem("Drinks");
+			menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
+			menuView.getItems().add(menuDrinks);
 
-        MenuItem menuTickets = new MenuItem("Tickets");
-        menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
-        menuView.getItems().add(menuTickets);
+			MenuItem menuTickets = new MenuItem("Tickets");
+			menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
+			menuView.getItems().add(menuTickets);
 
-        MenuItem menuDrinkTypes = new MenuItem("Drink Types");
-        menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
-        menuView.getItems().add(menuDrinkTypes);
+			MenuItem menuDrinkTypes = new MenuItem("Drink Types");
+			menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
+			menuView.getItems().add(menuDrinkTypes);
 
-        // Nous menús existents
-        MenuItem menuCountries = new MenuItem("Countries");
-        menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
-        menuView.getItems().add(menuCountries);
+			MenuItem menuCountries = new MenuItem("Countries");
+			menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
+			menuView.getItems().add(menuCountries);
 
-        MenuItem menuBrands = new MenuItem("Brands");
-        menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
-        menuView.getItems().add(menuBrands);
+			MenuItem menuBrands = new MenuItem("Brands");
+			menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
+			menuView.getItems().add(menuBrands);
 
-        // Admin només: Usuaris
-        if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
-            MenuItem menuUsers = new MenuItem("Users");
-            menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
-            menuView.getItems().add(menuUsers);
-        }
+			MenuItem menuUsers = new MenuItem("Users");
+			menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
+			menuView.getItems().add(menuUsers);
 
-        // Worker només: Crear tiquets
-        if ("worker".equalsIgnoreCase(loggedUser.getRole())) {
-            MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
-            menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
-            menuView.getItems().add(menuCreateTicket);
-        }
+			// L'admin també pot crear tiquets
+			MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
+			menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+			menuView.getItems().add(menuCreateTicket);
 
-        menuBar.getMenus().add(menuView);
-        return menuBar;
-    }
+		} else if ("worker".equalsIgnoreCase(loggedUser.getRole())) {
+			// Worker només pot crear tiquets
+			MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
+			menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+			menuView.getItems().add(menuCreateTicket);
+		}
 
+		// Si vols altres rols, aquí pots posar més condicions
 
-    private void loadView(String fxmlPath) {
-        try {
-            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
-            rootLayout.setCenter(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		menuBar.getMenus().add(menuView);
+		return menuBar;
+	}
+
+	private void loadView(String fxmlPath) {
+		try {
+			Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+			rootLayout.setCenter(view);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
-

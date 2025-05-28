@@ -7,11 +7,17 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.util.StringConverter;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Optional;
 
 public class TicketController {
+
+    // Constants per estats
+    private static final String STATUS_CLOSED = "closed";
+    private static final String STATUS_CREATED = "created";
 
     @FXML private TableView<Ticket> ticketTable;
     @FXML private TableColumn<Ticket, Integer> colTicketId;
@@ -39,23 +45,24 @@ public class TicketController {
             Connection conn = Database.getConnection();
             ticketDAO = new TicketDAO(conn);
         } catch (Exception e) {
-            statusLabel.setText("Error en la connexió a la BBDD");
+            statusLabel.setText("Error en la connexió a la base de dades.");
             e.printStackTrace();
+            disableAllButtons();
             return;
         }
 
         // Configura les columnes de la taula
-        colTicketId.setCellValueFactory(cellData -> 
+        colTicketId.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getTicketId()).asObject());
-        colUserId.setCellValueFactory(cellData -> 
+        colUserId.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
-        colTotal.setCellValueFactory(cellData -> 
+        colTotal.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getTotal()).asObject());
-        colStatus.setCellValueFactory(cellData -> 
+        colStatus.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatus()));
-        colCreatedAt.setCellValueFactory(cellData -> 
+        colCreatedAt.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getCreatedAt()));
-        colUpdatedAt.setCellValueFactory(cellData -> 
+        colUpdatedAt.setCellValueFactory(cellData ->
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUpdatedAt()));
 
         loadTickets();
@@ -63,11 +70,29 @@ public class TicketController {
         // Quan es selecciona una fila, carregar la info als camps (excloent createdAt i updatedAt)
         ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                userIdField.setText(String.valueOf(newSelection.getUserId()));
-                totalField.setText(String.valueOf(newSelection.getTotal()));
-                statusField.setText(newSelection.getStatus());
+                populateFields(newSelection);
+            } else {
+                clearFields();
             }
         });
+    }
+
+    private void disableAllButtons() {
+        addButton.setDisable(true);
+        updateButton.setDisable(true);
+        deleteButton.setDisable(true);
+    }
+
+    private void populateFields(Ticket ticket) {
+        userIdField.setText(String.valueOf(ticket.getUserId()));
+        totalField.setText(String.valueOf(ticket.getTotal()));
+        statusField.setText(ticket.getStatus());
+    }
+
+    private void clearFields() {
+        userIdField.clear();
+        totalField.clear();
+        statusField.clear();
     }
 
     private void loadTickets() {
@@ -77,17 +102,23 @@ public class TicketController {
         statusLabel.setText("Tiquets carregats.");
     }
 
+    // ------------ Accions UI ------------
+
     @FXML
     private void handleAddTicket() {
         try {
-            int userId = Integer.parseInt(userIdField.getText());
-            double total = Double.parseDouble(totalField.getText());
-            String status = statusField.getText();
+            int userId = Integer.parseInt(userIdField.getText().trim());
+            double total = Double.parseDouble(totalField.getText().trim());
+            String status = statusField.getText().trim();
+
+            if (status.isEmpty()) {
+                statusLabel.setText("El camp estat no pot estar buit.");
+                return;
+            }
 
             Ticket newTicket = new Ticket(0, userId, total, status, null, null);
 
-            boolean inserted = ticketDAO.insertTicket(newTicket);
-            if (inserted) {
+            if (ticketDAO.insertTicket(newTicket)) {
                 statusLabel.setText("Tiquet afegit correctament.");
                 clearFields();
                 loadTickets();
@@ -95,7 +126,10 @@ public class TicketController {
                 statusLabel.setText("Error en afegir tiquet.");
             }
         } catch (NumberFormatException e) {
-            statusLabel.setText("Format numèric incorrecte.");
+            statusLabel.setText("Format numèric incorrecte (UserId o Total).");
+        } catch (Exception e) {
+            statusLabel.setText("Error inesperat en afegir tiquet.");
+            e.printStackTrace();
         }
     }
 
@@ -108,15 +142,21 @@ public class TicketController {
         }
 
         try {
-            int userId = Integer.parseInt(userIdField.getText());
-            double total = Double.parseDouble(totalField.getText());
-            String status = statusField.getText();
+            int userId = Integer.parseInt(userIdField.getText().trim());
+            double total = Double.parseDouble(totalField.getText().trim());
+            String status = statusField.getText().trim();
 
-            // No posem createdAt ni updatedAt aquí
-            Ticket updatedTicket = new Ticket(selectedTicket.getTicketId(), userId, total, status, null, null);
+            if (status.isEmpty()) {
+                statusLabel.setText("El camp estat no pot estar buit.");
+                return;
+            }
 
-            boolean updated = ticketDAO.updateTicket(updatedTicket);
-            if (updated) {
+            // Actualitzem només camps que l'usuari pot modificar
+            selectedTicket.setUserId(userId);
+            selectedTicket.setTotal(total);
+            selectedTicket.setStatus(status);
+
+            if (ticketDAO.updateTicket(selectedTicket)) {
                 statusLabel.setText("Tiquet actualitzat correctament.");
                 clearFields();
                 loadTickets();
@@ -124,7 +164,10 @@ public class TicketController {
                 statusLabel.setText("Error en actualitzar tiquet.");
             }
         } catch (NumberFormatException e) {
-            statusLabel.setText("Format numèric incorrecte.");
+            statusLabel.setText("Format numèric incorrecte (UserId o Total).");
+        } catch (Exception e) {
+            statusLabel.setText("Error inesperat en actualitzar tiquet.");
+            e.printStackTrace();
         }
     }
 
@@ -136,20 +179,22 @@ public class TicketController {
             return;
         }
 
-        boolean deleted = ticketDAO.deleteTicket(selectedTicket.getTicketId());
-        if (deleted) {
-            statusLabel.setText("Tiquet eliminat correctament.");
-            clearFields();
-            loadTickets();
-        } else {
-            statusLabel.setText("Error en eliminar tiquet.");
+        try {
+            if (ticketDAO.deleteTicket(selectedTicket.getTicketId())) {
+                statusLabel.setText("Tiquet eliminat correctament.");
+                clearFields();
+                loadTickets();
+            } else {
+                statusLabel.setText("Error en eliminar tiquet.");
+            }
+        } catch (Exception e) {
+            statusLabel.setText("Error inesperat en eliminar tiquet.");
+            e.printStackTrace();
         }
     }
 
-    private void clearFields() {
-        userIdField.clear();
-        totalField.clear();
-        statusField.clear();
-    }
+   
+    
+
 }
 

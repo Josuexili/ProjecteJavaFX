@@ -88,10 +88,12 @@ public class UserController {
     // Mètode per omplir els camps de text amb l'usuari seleccionat
     private void populateFields(User user) {
         usernameField.setText(user.getUsername());
-        passwordField.clear();  // No posem res, per seguretat
+        passwordField.clear();  // No posem res per seguretat
         emailField.setText(user.getEmail());
         roleField.setText(user.getRole());
+        currentPassword = user.getPassword();  // <-- guardar la contrasenya actual aquí
     }
+
 
 
     private void loadUsers() {
@@ -162,9 +164,9 @@ public class UserController {
         selectedUser.setRole(role);
 
         if (!password.isEmpty()) {
-            selectedUser.setPassword(password); // només actualitza la contrasenya si s'ha introduït
+            selectedUser.setPassword(password);
         } else {
-            selectedUser.setPassword(currentPassword); // manté la contrasenya anterior si el camp és buit
+            selectedUser.setPassword(currentPassword);  // <-- manté contrasenya antiga si no s'ha escrit res
         }
 
         try {

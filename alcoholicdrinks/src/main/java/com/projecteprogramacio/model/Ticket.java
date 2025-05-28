@@ -13,9 +13,19 @@ public class Ticket {
 
     private List<TicketLine> lines = new ArrayList<>();
 
-    // Constructors
-    public Ticket() {}
+    // Constructor per crear un ticket nou amb client i estat inicial
+    public Ticket(User selectedClient, String estatCreat) {
+        if (selectedClient != null) {
+            this.userId = selectedClient.getUserId();
+        }
+        this.status = estatCreat;
+        this.total = 0.0;
+        this.lines = new ArrayList<>();
+        this.createdAt = null;
+        this.updatedAt = null;
+    }
 
+    // Constructor complet (ex. per carregar des de base de dades)
     public Ticket(int ticketId, int userId, double total, String status, String createdAt, String updatedAt) {
         this.ticketId = ticketId;
         this.userId = userId;
@@ -23,6 +33,7 @@ public class Ticket {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.lines = new ArrayList<>();
     }
 
     // Getters i Setters

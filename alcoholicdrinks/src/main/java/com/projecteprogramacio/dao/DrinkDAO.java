@@ -1,47 +1,46 @@
 package com.projecteprogramacio.dao;
 
-
 import com.projecteprogramacio.model.Drink;
-import com.projecteprogramacio.util.Database;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DrinkDAO {
 
-	public static boolean insertDrink(Drink drink) {
-	    String sql = "INSERT INTO drinks (name, type_id, brand_id, country_code, alcohol_content, " +
-	                 "description, volume, price, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private final Connection conn;
 
-	    try (Connection conn = Database.getConnection();
-	         PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public DrinkDAO(Connection conn) {
+        this.conn = conn;
+    }
 
-	        stmt.setString(1, drink.getName());
-	        stmt.setInt(2, drink.getTypeId());
-	        stmt.setInt(3, drink.getBrandId());
-	        stmt.setString(4, drink.getCountryCode());
-	        stmt.setDouble(5, drink.getAlcoholContent());
-	        stmt.setString(6, drink.getDescription());
-	        stmt.setDouble(7, drink.getVolume());
-	        stmt.setDouble(8, drink.getPrice());
-	        stmt.setBytes(9, drink.getImage());
+    public boolean insertDrink(Drink drink) {
+        String sql = "INSERT INTO drinks (name, type_id, brand_id, country_code, alcohol_content, " +
+                     "description, volume, price, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-	        int rows = stmt.executeUpdate();
-	        return rows > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
-	}
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, drink.getName());
+            stmt.setInt(2, drink.getTypeId());
+            stmt.setInt(3, drink.getBrandId());
+            stmt.setString(4, drink.getCountryCode());
+            stmt.setDouble(5, drink.getAlcoholContent());
+            stmt.setString(6, drink.getDescription());
+            stmt.setDouble(7, drink.getVolume());
+            stmt.setDouble(8, drink.getPrice());
+            stmt.setBytes(9, drink.getImage());
 
-    public static void updateDrink(Drink drink) {
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting drink: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateDrink(Drink drink) {
         String sql = "UPDATE drinks SET name=?, type_id=?, brand_id=?, country_code=?, alcohol_content=?, " +
                      "description=?, volume=?, price=?, image=? WHERE drink_id=?";
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, drink.getName());
             stmt.setInt(2, drink.getTypeId());
             stmt.setInt(3, drink.getBrandId());
@@ -53,22 +52,24 @@ public class DrinkDAO {
             stmt.setBytes(9, drink.getImage());
             stmt.setInt(10, drink.getDrinkId());
 
-            stmt.executeUpdate();
+            return stmt.executeUpdate() > 0;
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error updating drink: " + e.getMessage());
+            return false;
         }
     }
 
-    public static void deleteDrink(int drinkId) {
+    public boolean deleteDrink(int drinkId) {
         String sql = "DELETE FROM drinks WHERE drink_id=?";
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, drinkId);
-            stmt.executeUpdate();
+            return stmt.executeUpdate() > 0;
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error deleting drink: " + e.getMessage());
+            return false;
         }
     }
 
@@ -76,41 +77,63 @@ public class DrinkDAO {
         String sql = "SELECT * FROM drinks WHERE drink_id=?";
         Drink drink = null;
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, drinkId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                drink = extractDrinkFromResultSet(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    drink = extractDrinkFromResultSet(rs);
+                }
             }
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error retrieving drink by ID: " + e.getMessage());
         }
 
         return drink;
     }
 
-    public static List<Drink> getAllDrinks() {
+    public List<Drink> getAllDrinks() {
         List<Drink> drinks = new ArrayList<>();
         String sql = "SELECT * FROM drinks";
 
-        try (Connection conn = Database.getConnection();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 drinks.add(extractDrinkFromResultSet(rs));
             }
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error retrieving all drinks: " + e.getMessage());
         }
 
         return drinks;
     }
 
-    private static Drink extractDrinkFromResultSet(ResultSet rs) throws SQLException {
+    public List<Drink> searchDrinksByName(String nameFilter) {
+        List<Drink> drinks = new ArrayList<>();
+        String sql = "SELECT * FROM drinks WHERE name LIKE ?";
+
+        if (nameFilter == null || nameFilter.trim().isEmpty()) {
+            return drinks;
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + nameFilter + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    drinks.add(extractDrinkFromResultSet(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error searching drinks by name: " + e.getMessage());
+        }
+
+        return drinks;
+    }
+
+    private Drink extractDrinkFromResultSet(ResultSet rs) throws SQLException {
         return new Drink(
             rs.getInt("drink_id"),
             rs.getString("name"),
@@ -124,24 +147,5 @@ public class DrinkDAO {
             rs.getBytes("image")
         );
     }
-    public static List<Drink> searchDrinksByName(String nameFilter) {
-        List<Drink> drinks = new ArrayList<>();
-        String sql = "SELECT * FROM drinks WHERE name LIKE ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, "%" + nameFilter + "%");
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                drinks.add(extractDrinkFromResultSet(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return drinks;
-    }
-
 }
+
