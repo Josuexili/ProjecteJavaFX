@@ -12,6 +12,7 @@
         <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
 
+    <!-- Taula principal de tiquets -->
     <TableView fx:id="ticketTable" prefHeight="300" prefWidth="600">
         <columns>
             <TableColumn fx:id="colTicketId" text="Ticket ID" prefWidth="80"/>
@@ -23,6 +24,7 @@
         </columns>
     </TableView>
 
+    <!-- Formulari per editar dades del tiquet -->
     <GridPane hgap="10" vgap="10">
         <Label text="User ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <TextField fx:id="userIdField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
@@ -40,13 +42,38 @@
         <TextField fx:id="updatedAtField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
     </GridPane>
 
+    <!-- Botons per a CRUD del tiquet -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
         <Button fx:id="addButton" text="Add" onAction="#handleAddTicket"/>
         <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"/>
         <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"/>
-        
+        <Button fx:id="goToCreateTicketButton" text="Crear Tiquet Nou" onAction="#handleGoToCreateTicket"/>
     </HBox>
 
+    <!-- Etiqueta d'estat -->
     <Label fx:id="statusLabel" text="Status messages here" style="-fx-text-fill: red;"/>
 
+    <!-- Taula de línies del tiquet seleccionat -->
+    <Label text="Línies de Tiquet:" style="-fx-font-weight: bold;"/>
+    <TableView fx:id="ticketLinesTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="colLineId" text="Línia ID" prefWidth="100"/>
+            <TableColumn fx:id="colProductId" text="Producte ID" prefWidth="100"/>
+            <TableColumn fx:id="colQuantity" text="Quantitat" prefWidth="100"/>
+            <TableColumn fx:id="colPrice" text="Preu" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <!-- Formulari i accions per afegir/eliminar línies -->
+    <HBox spacing="10">
+        <Label text="Producte ID:"/>
+        <Label text="Producte:"/>
+<ComboBox fx:id="drinkComboBox" promptText="Selecciona un producte"/>
+		<Label text="Quantitat:"/>
+        <TextField fx:id="quantityField"/>
+        <Button fx:id="addLineButton" text="Afegir" onAction="#handleAddLine"/>
+        <Button fx:id="deleteLineButton" text="Eliminar" onAction="#handleDeleteLine"/>
+    </HBox>
+
 </VBox>
+

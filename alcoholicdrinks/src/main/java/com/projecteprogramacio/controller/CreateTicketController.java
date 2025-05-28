@@ -14,9 +14,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -280,29 +285,30 @@ public class CreateTicketController {
             mostrarError("Error creant tiquet: " + e.getMessage());
         }
     }
-
+    
     @FXML
-    private void handleReopenTicket() throws SQLException {
-        Ticket ticket = ticketTable.getSelectionModel().getSelectedItem();
-        if (ticket == null) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Selecciona un tiquet per reobrir.");
-            return;
-        }
+    private void handleGoToTickets() {
+        try {
+            // Carreguem la nova escena de la pantalla de tiquets
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketView.fxml"));
+            Parent root = loader.load();
 
-        if (!ESTAT_TANCAT.equals(ticket.getStatus())) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Només es poden reobrir tiquets tancats.");
-            return;
-        }
+            // Obtenim la finestra actual (Stage) des de qualsevol node actual (per exemple, el botó)
+            Stage stage = (Stage) finishTicketButton.getScene().getWindow();
 
-        ticket.setStatus(ESTAT_CREAT);
-		boolean updated = ticketDAO.updateTicket(ticket);
-		if (updated) {
-		    carregarTiquets();
-		    mostrarAlerta(Alert.AlertType.INFORMATION, "Tiquet reobert correctament.");
-		} else {
-		    mostrarAlerta(Alert.AlertType.ERROR, "No s'ha pogut reobrir el tiquet.");
-		}
+            // Assignem la nova escena
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Gestió de Tiquets");
+            stage.show();
+
+        } catch (IOException e) {
+            mostrarError("No s'ha pogut carregar la pantalla de tiquets.\n" + e.getMessage());
+        }
     }
+
+
+    
 
     private void mostrarAlerta(Alert.AlertType tipus, String missatge) {
         Alert alert = new Alert(tipus, missatge, ButtonType.OK);

@@ -78,5 +78,34 @@ public class TicketLineDAO {
             return rowsDeleted >= 0; // 0 si no hi havia línies, també és vàlid
         }
     }
+    public double calculateTotalByTicketId(int ticketId) {
+        double total = 0.0;
+        String sql = "SELECT SUM(quantity * price) AS total FROM ticket_lines WHERE ticket_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, ticketId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getDouble("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public boolean deleteLine(int ticketLineId) {
+        String sql = "DELETE FROM ticket_lines WHERE ticket_line_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, ticketLineId);
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }
 
