@@ -2,6 +2,7 @@ package com.projecteprogramacio.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Ticket {
     private int ticketId;
@@ -120,7 +121,8 @@ public class Ticket {
 
     @Override
     public String toString() {
-        return "Ticket #" + ticketId + " - " + status + " - Total: " + String.format("%.2f€", total);
+        return "Ticket #" + ticketId + " - " + status + " - Total: " + String.format(Locale.US, "%.2f€", total);
     }
+
 }
 

@@ -6,6 +6,7 @@ import com.projecteprogramacio.dao.TicketLineDAO;
 import com.projecteprogramacio.model.Drink;
 import com.projecteprogramacio.model.Ticket;
 import com.projecteprogramacio.model.TicketLine;
+import com.projecteprogramacio.model.User;
 import com.projecteprogramacio.util.Database;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,49 +15,51 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 
 public class TicketController {
 
     @FXML private TableView<Ticket> ticketTable;
-    @FXML private TableColumn<Ticket, Integer> colTicketId;
-    @FXML private TableColumn<Ticket, Integer> colUserId;
+    @FXML private TableColumn<Ticket, Integer> colTicketId, colUserId;
     @FXML private TableColumn<Ticket, Double> colTotal;
-    @FXML private TableColumn<Ticket, String> colStatus;
-    @FXML private TableColumn<Ticket, String> colCreatedAt;
-    @FXML private TableColumn<Ticket, String> colUpdatedAt;
+    @FXML private TableColumn<Ticket, String> colStatus, colCreatedAt, colUpdatedAt;
 
-    @FXML private TextField userIdField;
-    @FXML private TextField totalField;
-    @FXML private TextField statusField;
+    @FXML private TextField userIdField, totalField, statusField;
     @FXML private Button addButton, updateButton, deleteButton;
     @FXML private Label statusLabel;
     @FXML private Button goToCreateTicketButton;
 
-    private ObservableList<Ticket> ticketList;
-    private TicketDAO ticketDAO;
-
-    // Línies de tiquet
     @FXML private TableView<TicketLine> ticketLinesTable;
-    @FXML private TableColumn<TicketLine, Integer> colLineId;
-    @FXML private TableColumn<TicketLine, Integer> colProductId;
-    @FXML private TableColumn<TicketLine, Integer> colQuantity;
+    @FXML private TableColumn<TicketLine, Integer> colLineId, colProductId, colQuantity;
     @FXML private TableColumn<TicketLine, Double> colPrice;
-    @FXML private TextField quantityField;
-    @FXML private TextField priceField;
+
+    @FXML private TextField quantityField, priceField;
     @FXML private ComboBox<Drink> drinkComboBox;
     @FXML private Button addLineButton, deleteLineButton;
 
+    private ObservableList<Ticket> ticketList;
     private ObservableList<TicketLine> ticketLineList;
+    private TicketDAO ticketDAO;
     private TicketLineDAO ticketLineDAO;
     private DrinkDAO drinkDAO;
+    
+    private User loggedUser; // Aquest l'hauries d'inicialitzar quan l'usuari fa login
 
+    public void setLoggedUser(User user) {
+        this.loggedUser = user;
+    }
     @FXML
     public void initialize() {
+    	
+    	
         try {
             Connection conn = Database.getConnection();
             ticketDAO = new TicketDAO(conn);
@@ -68,61 +71,78 @@ public class TicketController {
             disableAllButtons();
             return;
         }
+        
 
-        // Columnes taula tiquet
-        colTicketId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getTicketId()).asObject());
-        colUserId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
-        colTotal.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getTotal()).asObject());
-        colStatus.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatus()));
-        colCreatedAt.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getCreatedAt()));
-        colUpdatedAt.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUpdatedAt()));
-
-        // Columnes línies de tiquet
-        colLineId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getTicketLineId()).asObject());
-        colProductId.setCellValueFactory(cellData -> {
-            Drink drink = cellData.getValue().getDrink();
-            int drinkId = (drink != null) ? drink.getDrinkId() : 0;
-            return new javafx.beans.property.SimpleIntegerProperty(drinkId).asObject();
-        });
-        colQuantity.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
-        colPrice.setCellValueFactory(cellData -> {
-            Drink drink = cellData.getValue().getDrink();
-            double price = (drink != null) ? drink.getPrice() : 0.0;
-            return new javafx.beans.property.SimpleDoubleProperty(price).asObject();
-        });
+        setupTicketTable();
+        setupLineTable();
+        setupDrinkComboBox();
 
         loadTickets();
+        clearFields();
+        clearTicketLines();
+        disableLineButtons(true);
 
-        ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                populateFields(newSelection);
-                loadTicketLines(newSelection.getTicketId());
+        ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                populateFields(newSel);
+                loadTicketLines(newSel.getTicketId());
             } else {
                 clearFields();
                 clearTicketLines();
             }
+            
         });
+        
+        
+        
+    }
 
+    private void setupTicketTable() {
+        colTicketId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketId()).asObject());
+        colUserId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getUserId()).asObject());
+        colTotal.setCellValueFactory(cell -> new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getTotal()).asObject());
+        colStatus.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus()));
+        colCreatedAt.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getCreatedAt()));
+        colUpdatedAt.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getUpdatedAt()));
+    }
+
+    private void setupLineTable() {
+        colLineId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketLineId()).asObject());
+        colProductId.setCellValueFactory(cell -> {
+            Drink drink = cell.getValue().getDrink();
+            return new javafx.beans.property.SimpleIntegerProperty(drink != null ? drink.getDrinkId() : 0).asObject();
+        });
+        colQuantity.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getQuantity()).asObject());
+        colPrice.setCellValueFactory(cell -> {
+            Drink drink = cell.getValue().getDrink();
+            return new javafx.beans.property.SimpleDoubleProperty(drink != null ? drink.getPrice() : 0.0).asObject();
+        });
+    }
+
+    private void setupDrinkComboBox() {
         List<Drink> drinks = drinkDAO.getAllDrinks();
         drinkComboBox.setItems(FXCollections.observableArrayList(drinks));
+
         drinkComboBox.setCellFactory(cb -> new ListCell<>() {
             @Override
             protected void updateItem(Drink drink, boolean empty) {
                 super.updateItem(drink, empty);
-                setText((drink == null || empty) ? "" : drink.getName());
+                setText(empty || drink == null ? "" : drink.getName());
             }
         });
+
         drinkComboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(Drink drink, boolean empty) {
                 super.updateItem(drink, empty);
-                setText((drink == null || empty) ? "" : drink.getName());
+                setText(empty || drink == null ? "" : drink.getName());
             }
         });
 
-        clearFields();
-        clearTicketLines();
-        disableLineButtons(true);
+        drinkComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldDrink, newDrink) -> {
+        	priceField.setText(newDrink != null ? String.format(Locale.US, "%.2f", newDrink.getPrice()) : "");
+
+        });
     }
 
     private void disableAllButtons() {
@@ -139,7 +159,7 @@ public class TicketController {
 
     private void populateFields(Ticket ticket) {
         userIdField.setText(String.valueOf(ticket.getUserId()));
-        totalField.setText(String.format("%.2f", ticket.getTotal()));
+        totalField.setText(String.format(Locale.US, "%.2f", ticket.getTotal()));
         statusField.setText(ticket.getStatus());
         disableLineButtons(false);
     }
@@ -152,22 +172,22 @@ public class TicketController {
     }
 
     private void loadTickets() {
-        List<Ticket> tickets = ticketDAO.getAllTickets();
-        ticketList = FXCollections.observableArrayList(tickets);
+        ticketList = FXCollections.observableArrayList(ticketDAO.getAllTickets());
         ticketTable.setItems(ticketList);
         statusLabel.setText("Tiquets carregats.");
     }
 
     private void loadTicketLines(int ticketId) {
-        List<TicketLine> lines = ticketLineDAO.getLinesByTicketId(ticketId);
-        ticketLineList = FXCollections.observableArrayList(lines);
+        ticketLineList = FXCollections.observableArrayList(ticketLineDAO.getLinesByTicketId(ticketId));
         ticketLinesTable.setItems(ticketLineList);
     }
 
     private void clearTicketLines() {
-        if (ticketLineList != null) ticketLineList.clear();
-        ticketLinesTable.setItems(null);
+        if (ticketLineList != null)
+            ticketLineList.clear();
+        ticketLinesTable.setItems(FXCollections.observableArrayList());
     }
+
 
     @FXML
     private void handleAddTicket() {
@@ -177,31 +197,28 @@ public class TicketController {
             String status = statusField.getText().trim();
 
             if (status.isEmpty()) {
-                statusLabel.setText("El camp estat no pot estar buit.");
+                statusLabel.setText("L'estat no pot estar buit.");
                 return;
             }
 
             Ticket newTicket = new Ticket(0, userId, total, status, null, null);
             if (ticketDAO.insertTicket(newTicket)) {
                 statusLabel.setText("Tiquet afegit correctament.");
-                clearFields();
                 loadTickets();
+                clearFields();
             } else {
                 statusLabel.setText("Error en afegir tiquet.");
             }
         } catch (NumberFormatException e) {
-            statusLabel.setText("Format numèric incorrecte (UserId o Total).");
-        } catch (Exception e) {
-            statusLabel.setText("Error inesperat en afegir tiquet.");
-            e.printStackTrace();
+            statusLabel.setText("UserId o Total no vàlids.");
         }
     }
 
     @FXML
     private void handleUpdateTicket() {
-        Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
-        if (selectedTicket == null) {
-            statusLabel.setText("Selecciona un tiquet per actualitzar.");
+        Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            statusLabel.setText("Selecciona un tiquet.");
             return;
         }
 
@@ -211,76 +228,68 @@ public class TicketController {
             String status = statusField.getText().trim();
 
             if (status.isEmpty()) {
-                statusLabel.setText("El camp estat no pot estar buit.");
+                statusLabel.setText("L'estat no pot estar buit.");
                 return;
             }
 
-            selectedTicket.setUserId(userId);
-            selectedTicket.setTotal(total);
-            selectedTicket.setStatus(status);
+            selected.setUserId(userId);
+            selected.setTotal(total);
+            selected.setStatus(status);
 
-            if (ticketDAO.updateTicket(selectedTicket)) {
-                statusLabel.setText("Tiquet actualitzat correctament.");
-                clearFields();
+            if (ticketDAO.updateTicket(selected)) {
+                statusLabel.setText("Tiquet actualitzat.");
                 loadTickets();
+                clearFields();
             } else {
                 statusLabel.setText("Error en actualitzar tiquet.");
             }
         } catch (NumberFormatException e) {
-            statusLabel.setText("Format numèric incorrecte (UserId o Total).");
-        } catch (Exception e) {
-            statusLabel.setText("Error inesperat en actualitzar tiquet.");
-            e.printStackTrace();
+            statusLabel.setText("UserId o Total no vàlids.");
         }
     }
 
     @FXML
     private void handleDeleteTicket() {
-        Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
-        if (selectedTicket == null) {
-            statusLabel.setText("Selecciona un tiquet per eliminar.");
+        Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            statusLabel.setText("Selecciona un tiquet.");
             return;
         }
 
-        try {
-            if (ticketDAO.deleteTicket(selectedTicket.getTicketId())) {
-                statusLabel.setText("Tiquet eliminat correctament.");
-                clearFields();
-                clearTicketLines();
-                loadTickets();
-            } else {
-                statusLabel.setText("Error en eliminar tiquet.");
-            }
-        } catch (Exception e) {
-            statusLabel.setText("Error inesperat en eliminar tiquet.");
-            e.printStackTrace();
+        if (ticketDAO.deleteTicket(selected.getTicketId())) {
+            statusLabel.setText("Tiquet eliminat.");
+            loadTickets();
+            clearFields();
+            clearTicketLines();
+        } else {
+            statusLabel.setText("Error en eliminar tiquet.");
         }
     }
 
     @FXML
-    private void handleAddLine() {
+    private void handleAddLine() throws SQLException {
         Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
         if (selectedTicket == null) {
-            statusLabel.setText("Selecciona un tiquet per afegir línies.");
+            statusLabel.setText("Selecciona un tiquet.");
             return;
         }
 
         try {
             Drink drink = drinkComboBox.getValue();
             if (drink == null) {
-                statusLabel.setText("Has de seleccionar una beguda.");
+                statusLabel.setText("Selecciona una beguda.");
                 return;
             }
 
             int quantity = Integer.parseInt(quantityField.getText().trim());
             if (quantity <= 0) {
-                statusLabel.setText("La quantitat ha de ser major que zero.");
+                statusLabel.setText("Quantitat ha de ser > 0.");
                 return;
             }
 
-            TicketLine newLine = new TicketLine(0, selectedTicket.getTicketId(), drink, quantity);
-            if (ticketLineDAO.insertLine(newLine)) {
-                statusLabel.setText("Línia afegida correctament.");
+            TicketLine line = new TicketLine(0, selectedTicket.getTicketId(), drink, quantity);
+            if (ticketLineDAO.insertLine(line)) {
+                statusLabel.setText("Línia afegida.");
                 loadTicketLines(selectedTicket.getTicketId());
                 updateTicketTotal(selectedTicket.getTicketId());
                 clearLineFields();
@@ -288,10 +297,7 @@ public class TicketController {
                 statusLabel.setText("Error en afegir línia.");
             }
         } catch (NumberFormatException e) {
-            statusLabel.setText("Format numèric incorrecte (Quantitat).");
-        } catch (Exception e) {
-            statusLabel.setText("Error inesperat en afegir línia.");
-            e.printStackTrace();
+            statusLabel.setText("Quantitat no vàlida.");
         }
     }
 
@@ -299,33 +305,18 @@ public class TicketController {
     private void handleDeleteLine() {
         Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
         TicketLine selectedLine = ticketLinesTable.getSelectionModel().getSelectedItem();
-        if (selectedTicket == null) {
-            statusLabel.setText("Selecciona un tiquet.");
-            return;
-        }
-        if (selectedLine == null) {
-            statusLabel.setText("Selecciona una línia per eliminar.");
+        if (selectedTicket == null || selectedLine == null) {
+            statusLabel.setText("Selecciona tiquet i línia.");
             return;
         }
 
-        try {
-            if (ticketLineDAO.deleteLine(selectedLine.getTicketLineId())) {
-                statusLabel.setText("Línia eliminada correctament.");
-                loadTicketLines(selectedTicket.getTicketId());
-                updateTicketTotal(selectedTicket.getTicketId());
-            } else {
-                statusLabel.setText("Error en eliminar línia.");
-            }
-        } catch (Exception e) {
-            statusLabel.setText("Error inesperat en eliminar línia.");
-            e.printStackTrace();
+        if (ticketLineDAO.deleteLine(selectedLine.getTicketLineId())) {
+            statusLabel.setText("Línia eliminada.");
+            loadTicketLines(selectedTicket.getTicketId());
+            updateTicketTotal(selectedTicket.getTicketId());
+        } else {
+            statusLabel.setText("Error en eliminar línia.");
         }
-    }
-
-    private void clearLineFields() {
-        drinkComboBox.getSelectionModel().clearSelection();
-        quantityField.clear();
-        priceField.clear();
     }
 
     private void updateTicketTotal(int ticketId) {
@@ -335,7 +326,7 @@ public class TicketController {
             for (TicketLine line : lines) {
                 Drink drink = line.getDrink();
                 if (drink != null) {
-                    newTotal += line.getQuantity() * drink.getPrice();
+                    newTotal += drink.getPrice() * line.getQuantity();
                 }
             }
 
@@ -348,24 +339,56 @@ public class TicketController {
                 populateFields(ticket);
             }
         } catch (Exception e) {
-            statusLabel.setText("Error en actualitzar el total del tiquet.");
+            statusLabel.setText("Error en actualitzar total.");
             e.printStackTrace();
         }
+    }
+
+    private void clearLineFields() {
+        drinkComboBox.getSelectionModel().clearSelection();
+        quantityField.clear();
+        priceField.clear();
     }
 
     @FXML
     private void handleGoToCreateTicket() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/projecteprogramacio/view/createTicket.fxml"));
-            Parent root = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketCreation.fxml"));
+            Parent view = loader.load();
+
+            // Obtenir la finestra on està el botó
             Stage stage = (Stage) goToCreateTicketButton.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Crear nou tiquet");
-            stage.show();
+
+            // Suposant que l'arrel actual és un BorderPane:
+            BorderPane rootLayout = (BorderPane) stage.getScene().getRoot();
+            rootLayout.setCenter(view);
+
         } catch (IOException e) {
-            statusLabel.setText("Error en carregar la pantalla de crear tiquet.");
+            statusLabel.setText("Error en obrir vista de creació.");
             e.printStackTrace();
         }
     }
+    @FXML
+    private void handleGoToCreateTicketButton() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketCreation.fxml"));
+            Parent view = loader.load();
+
+            Stage stage = (Stage) goToCreateTicketButton.getScene().getWindow();
+
+            VBox rootLayout = (VBox) stage.getScene().getRoot();
+
+            // Substitueix tot el contingut del VBox pel nou view
+            rootLayout.getChildren().clear();
+            rootLayout.getChildren().add(view);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            statusLabel.setText("Error en obrir vista de creació.");
+        }
+    }
+
+
+
 }
 

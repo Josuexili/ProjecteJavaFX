@@ -7,6 +7,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -48,21 +49,36 @@ public class AppController extends Application {
 
     public void showMainMenu() {
         rootLayout = new BorderPane();
-
         MenuController menuController = new MenuController(loggedUser, rootLayout);
-        rootLayout.setTop(menuController.createMenuBar());
 
+        // Crear el menú només si és admin
+        MenuBar menuBar = menuController.createMenuBar();
+        if (menuBar != null) {
+            rootLayout.setTop(menuBar);
+        }
+
+        // Carregar la vista inicial segons el rol
         try {
-            Parent view = FXMLLoader.load(getClass().getResource("/view/DrinkView.fxml"));
+            String initialView;
+            if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
+                initialView = "/view/DrinkView.fxml";
+            } else if ("worker".equalsIgnoreCase(loggedUser.getRole())) {
+                initialView = "/view/TicketCreation.fxml";
+            } else {
+                // Valor per defecte o error
+                initialView = "/view/AccessDenied.fxml"; // opcional si tens una vista d’error
+            }
+
+            Parent view = FXMLLoader.load(getClass().getResource(initialView));
             rootLayout.setCenter(view);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         Scene scene = new Scene(rootLayout, 800, 600);
-        primaryStage.setTitle("Drinks & Users");
+        primaryStage.setTitle("Gestió");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 }
-

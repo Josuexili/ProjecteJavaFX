@@ -35,19 +35,15 @@
         <Label text="Status:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="statusField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label text="Created At:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="createdAtField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
-        <Label text="Updated At:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <TextField fx:id="updatedAtField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        
     </GridPane>
 
     <!-- Botons per a CRUD del tiquet -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="addButton" text="Add" onAction="#handleAddTicket"/>
         <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"/>
         <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"/>
-        <Button fx:id="goToCreateTicketButton" text="Crear Tiquet Nou" onAction="#handleGoToCreateTicket"/>
+        <Button fx:id="goToCreateTicketButton" text="Crear Tiquet Nou" onAction="#handleGoToCreateTicketButton"/>
+
     </HBox>
 
     <!-- Etiqueta d'estat -->
@@ -65,15 +61,20 @@
     </TableView>
 
     <!-- Formulari i accions per afegir/eliminar línies -->
-    <HBox spacing="10">
-        <Label text="Producte ID:"/>
+    <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Producte:"/>
-<ComboBox fx:id="drinkComboBox" promptText="Selecciona un producte"/>
-		<Label text="Quantitat:"/>
-        <TextField fx:id="quantityField"/>
+        <ComboBox fx:id="drinkComboBox" promptText="Selecciona un producte"/>
+        
+        <Label text="Quantitat:"/>
+        <TextField fx:id="quantityField" prefWidth="60"/>
+        
+        <Label text="Preu:"/>
+        <TextField fx:id="priceField" prefWidth="80"/>
+        
         <Button fx:id="addLineButton" text="Afegir" onAction="#handleAddLine"/>
         <Button fx:id="deleteLineButton" text="Eliminar" onAction="#handleDeleteLine"/>
     </HBox>
 
 </VBox>
+
 

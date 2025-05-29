@@ -18,51 +18,53 @@ public class MenuController {
 	public MenuController(User loggedUser, BorderPane rootLayout) {
 		this.loggedUser = loggedUser;
 		this.rootLayout = rootLayout;
+		// Carrega la vista inicial segons rol
 	}
 
+	/**
+	 * Aquesta funció retorna el menú per afegir-lo només si cal (ex: admins).
+	 */
 	public MenuBar createMenuBar() {
+		if (!"admin".equalsIgnoreCase(loggedUser.getRole())) {
+			// Els no-admins no tenen menú
+			return null;
+		}
+
 		MenuBar menuBar = new MenuBar();
 		Menu menuView = new Menu("Vistes");
 
-		if ("admin".equalsIgnoreCase(loggedUser.getRole())) {
-			// L'admin veu tot
-			MenuItem menuDrinks = new MenuItem("Drinks");
-			menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
-			menuView.getItems().add(menuDrinks);
+		// L'admin veu totes les opcions
+		MenuItem menuDrinks = new MenuItem("Drinks");
+		menuDrinks.setOnAction(e -> loadView("/view/DrinkView.fxml"));
+		menuView.getItems().add(menuDrinks);
 
-			MenuItem menuTickets = new MenuItem("Tickets");
-			menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
-			menuView.getItems().add(menuTickets);
+		MenuItem menuTickets = new MenuItem("Tickets");
+		menuTickets.setOnAction(e -> loadView("/view/TicketView.fxml"));
+		menuView.getItems().add(menuTickets);
 
-			MenuItem menuDrinkTypes = new MenuItem("Drink Types");
-			menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
-			menuView.getItems().add(menuDrinkTypes);
+		MenuItem menuDrinkTypes = new MenuItem("Drink Types");
+		menuDrinkTypes.setOnAction(e -> loadView("/view/DrinkTypeView.fxml"));
+		menuView.getItems().add(menuDrinkTypes);
 
-			MenuItem menuCountries = new MenuItem("Countries");
-			menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
-			menuView.getItems().add(menuCountries);
+		MenuItem menuCountries = new MenuItem("Countries");
+		menuCountries.setOnAction(e -> loadView("/view/CountryView.fxml"));
+		menuView.getItems().add(menuCountries);
 
-			MenuItem menuBrands = new MenuItem("Brands");
-			menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
-			menuView.getItems().add(menuBrands);
+		MenuItem menuBrands = new MenuItem("Brands");
+		menuBrands.setOnAction(e -> loadView("/view/BrandView.fxml"));
+		menuView.getItems().add(menuBrands);
 
-			MenuItem menuUsers = new MenuItem("Users");
-			menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
-			menuView.getItems().add(menuUsers);
+		MenuItem menuUsers = new MenuItem("Users");
+		menuUsers.setOnAction(e -> loadView("/view/UserView.fxml"));
+		menuView.getItems().add(menuUsers);
 
-			// L'admin també pot crear tiquets
-			MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
-			menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
-			menuView.getItems().add(menuCreateTicket);
+		MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
+		menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
+		menuView.getItems().add(menuCreateTicket);
 
-		} else if ("worker".equalsIgnoreCase(loggedUser.getRole())) {
-			// Worker només pot crear tiquets
-			MenuItem menuCreateTicket = new MenuItem("Crear Tiquet");
-			menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
-			menuView.getItems().add(menuCreateTicket);
-		}
-
-		// Si vols altres rols, aquí pots posar més condicions
+		MenuItem menuSales = new MenuItem("Sales");
+		menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
+		menuView.getItems().add(menuSales);
 
 		menuBar.getMenus().add(menuView);
 		return menuBar;
