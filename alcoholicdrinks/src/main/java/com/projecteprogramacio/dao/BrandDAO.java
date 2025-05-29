@@ -1,92 +1,62 @@
 package com.projecteprogramacio.dao;
 
-
-import com.projecteprogramacio.model.Brand;
-import com.projecteprogramacio.util.Database;
-
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.projecteprogramacio.model.Brand;
+
 public class BrandDAO {
+    private final Connection conn;
 
-    public void insertBrand(Brand brand) {
-        String sql = "INSERT INTO brands (name, country_code) VALUES (?, ?)";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, brand.getName());
-            stmt.setString(2, brand.getCountryCode());
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public BrandDAO(Connection conn) {
+        this.conn = conn;
     }
+    
+    
 
-    public void updateBrand(Brand brand) {
-        String sql = "UPDATE brands SET name=?, country_code=? WHERE brand_id=?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, brand.getName());
-            stmt.setString(2, brand.getCountryCode());
-            stmt.setInt(3, brand.getBrandId());
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void deleteBrand(int brandId) {
-        String sql = "DELETE FROM brands WHERE brand_id=?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, brandId);
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Brand getBrandById(int brandId) {
-        String sql = "SELECT * FROM brands WHERE brand_id=?";
-        Brand brand = null;
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, brandId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                brand = extractBrandFromResultSet(rs);
+    public int getIdOrInsert(String brandName, String countryCode) {
+        try {
+            // Comprova si la marca ja existeix
+            String selectSql = "SELECT brand_id FROM brands WHERE name = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setString(1, brandName);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt("brand_id");
+                }
             }
 
+            // Si no existeix, insereix-la
+            String insertSql = "INSERT INTO brands (name, country_code) VALUES (?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, brandName);
+                stmt.setString(2, countryCode);
+                stmt.executeUpdate();
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return brand;
+        return -1; // error
     }
-
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
-        String sql = "SELECT * FROM brands";
+        String sql = "SELECT brand_id, name, country_code FROM brands";
 
-        try (Connection conn = Database.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                brands.add(extractBrandFromResultSet(rs));
+                Brand brand = new Brand(
+                    rs.getInt("brand_id"),
+                    rs.getString("name"),
+                    rs.getString("country_code")
+                );
+                brands.add(brand);
             }
 
         } catch (SQLException e) {
@@ -95,13 +65,6 @@ public class BrandDAO {
 
         return brands;
     }
-
-    private Brand extractBrandFromResultSet(ResultSet rs) throws SQLException {
-        return new Brand(
-            rs.getInt("brand_id"),
-            rs.getString("name"),
-            rs.getString("country_code")
-        );
-    }
+    
 }
 

@@ -1,6 +1,5 @@
 package com.projecteprogramacio.dao;
 
-
 import com.projecteprogramacio.model.Country;
 import com.projecteprogramacio.util.Database;
 
@@ -9,99 +8,55 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CountryDAO {
+	private final Connection conn;
 
-    // Afegir un país
-    public boolean insertCountry(Country country) {
-        String sql = "INSERT INTO countries (country_code, name) VALUES (?, ?)";
+	public CountryDAO(Connection conn) {
+		this.conn = conn;
+	}
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+	public boolean getOrInsert(String countryCode, String countryName) {
+		String selectSql = "SELECT country_code FROM countries WHERE country_code = ?";
+		String insertSql = "INSERT INTO countries (country_code, name) VALUES (?, ?)";
 
-            stmt.setString(1, country.getCountryCode());
-            stmt.setString(2, country.getName());
-            return stmt.executeUpdate() > 0;
+		try (Connection conn = Database.getConnection()) {
+			// Comprova si ja existeix
+			try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+				stmt.setString(1, countryCode);
+				ResultSet rs = stmt.executeQuery();
+				if (rs.next()) {
+					return true; // Ja existeix
+				}
+			}
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
+			// Inserta nou país
+			try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
+				stmt.setString(1, countryCode);
+				stmt.setString(2, countryName);
+				return stmt.executeUpdate() > 0;
+			}
 
-    // Obtenir tots els països
-    public List<Country> getAllCountries() {
-        List<Country> countries = new ArrayList<>();
-        String sql = "SELECT country_code, name FROM countries";
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
-        try (Connection conn = Database.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+	public List<Country> getAllCountries() {
+		List<Country> list = new ArrayList<>();
+		String sql = "SELECT country_code, name FROM countries";
 
-            while (rs.next()) {
-                Country country = new Country();
-                country.setCountryCode(rs.getString("country_code"));
-                country.setName(rs.getString("name"));
-                countries.add(country);
-            }
+		try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+			while (rs.next()) {
+				Country country = new Country(rs.getString("country_code"), rs.getString("name"));
+				list.add(country);
+			}
 
-        return countries;
-    }
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-    // Buscar un país pel seu codi
-    public Country getCountryByCode(String code) {
-        String sql = "SELECT country_code, name FROM countries WHERE country_code = ?";
-        Country country = null;
+		return list;
+	}
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, code);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                country = new Country(rs.getString("country_code"), rs.getString("name"));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return country;
-    }
-
-    // Actualitzar país
-    public boolean updateCountry(Country country) {
-        String sql = "UPDATE countries SET name = ? WHERE country_code = ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, country.getName());
-            stmt.setString(2, country.getCountryCode());
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Eliminar país
-    public boolean deleteCountry(String code) {
-        String sql = "DELETE FROM countries WHERE country_code = ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, code);
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 }

@@ -74,7 +74,14 @@ public class DrinkDAO {
     }
 
     public Drink getDrinkById(int drinkId) {
-        String sql = "SELECT * FROM drinks WHERE drink_id=?";
+        String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
+                     "d.description, d.volume, d.price, d.image, " +
+                     "b.name AS brandName, c.name AS countryName " +
+                     "FROM drinks d " +
+                     "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
+                     "LEFT JOIN countries c ON d.country_code = c.code " +
+                     "WHERE d.drink_id = ?";
+
         Drink drink = null;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -94,7 +101,12 @@ public class DrinkDAO {
 
     public List<Drink> getAllDrinks() {
         List<Drink> drinks = new ArrayList<>();
-        String sql = "SELECT * FROM drinks";
+        String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
+                     "d.description, d.volume, d.price, d.image, " +
+                     "b.name AS brandName, c.name AS countryName " +
+                     "FROM drinks d " +
+                     "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
+                     "LEFT JOIN countries c ON d.country_code = c.code";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -112,7 +124,13 @@ public class DrinkDAO {
 
     public List<Drink> searchDrinksByName(String nameFilter) {
         List<Drink> drinks = new ArrayList<>();
-        String sql = "SELECT * FROM drinks WHERE name LIKE ?";
+        String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
+                     "d.description, d.volume, d.price, d.image, " +
+                     "b.name AS brandName, c.name AS countryName " +
+                     "FROM drinks d " +
+                     "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
+                     "LEFT JOIN countries c ON d.country_code = c.code " +
+                     "WHERE d.name LIKE ?";
 
         if (nameFilter == null || nameFilter.trim().isEmpty()) {
             return drinks;
@@ -134,7 +152,7 @@ public class DrinkDAO {
     }
 
     private Drink extractDrinkFromResultSet(ResultSet rs) throws SQLException {
-        return new Drink(
+        Drink drink = new Drink(
             rs.getInt("drink_id"),
             rs.getString("name"),
             rs.getInt("type_id"),
@@ -144,8 +162,11 @@ public class DrinkDAO {
             rs.getString("description"),
             rs.getDouble("volume"),
             rs.getDouble("price"),
-            rs.getBytes("image")
+            rs.getBytes("image"),
+            rs.getString("brandName"),    // Nom marca
+            rs.getString("countryName")   // Nom país
         );
+        return drink;
     }
 }
 

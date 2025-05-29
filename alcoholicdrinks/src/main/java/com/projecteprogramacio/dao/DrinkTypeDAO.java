@@ -1,114 +1,70 @@
 package com.projecteprogramacio.dao;
 
-
 import com.projecteprogramacio.model.DrinkType;
-import com.projecteprogramacio.util.Database;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DrinkTypeDAO {
 
-    // Crear un nou tipus de beguda
-    public boolean insertDrinkType(DrinkType drinkType) {
-        String sql = "INSERT INTO drink_types (name, image) VALUES (?, ?)";
+	private final Connection conn;
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+	public DrinkTypeDAO(Connection conn) {
+		this.conn = conn;
+	}
 
-            stmt.setString(1, drinkType.getName());
-            stmt.setBytes(2, drinkType.getImage());
-            return stmt.executeUpdate() > 0;
+	// Inserta només si no existeix
+	public int getOrInsert(String name, byte[] image) {
+		String selectSql = "SELECT type_id FROM drink_types WHERE name = ?";
+		String insertSql = "INSERT INTO drink_types (name, image) VALUES (?, ?)";
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
+		try {
+			// Comprova si ja existeix
+			try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+				stmt.setString(1, name);
+				ResultSet rs = stmt.executeQuery();
+				if (rs.next()) {
+					return rs.getInt("type_id"); // Ja existeix
+				}
+			}
 
-    // Obtenir tots els tipus
-    public List<DrinkType> getAllDrinkTypes() {
-        List<DrinkType> list = new ArrayList<>();
-        String sql = "SELECT type_id, name, image FROM drink_types";
+			// Inserta nou tipus
+			try (PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+				stmt.setString(1, name);
+				stmt.setBytes(2, image);
+				int affectedRows = stmt.executeUpdate();
 
-        try (Connection conn = Database.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+				if (affectedRows > 0) {
+					ResultSet generatedKeys = stmt.getGeneratedKeys();
+					if (generatedKeys.next()) {
+						return generatedKeys.getInt(1); // Retorna l'ID generat
+					}
+				}
+			}
 
-            while (rs.next()) {
-                DrinkType dt = new DrinkType(
-                    rs.getInt("type_id"),
-                    rs.getString("name"),
-                    rs.getBytes("image")
-                );
-                list.add(dt);
-            }
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+		return -1; // Error
+	}
 
-        return list;
-    }
+	public List<DrinkType> getAllDrinkTypes() {
+		List<DrinkType> list = new ArrayList<>();
+		String sql = "SELECT type_id, name, image FROM drink_types";
 
-    // Obtenir un tipus pel seu ID
-    public DrinkType getDrinkTypeById(int id) {
-        String sql = "SELECT type_id, name, image FROM drink_types WHERE type_id = ?";
-        DrinkType drinkType = null;
+		try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+			while (rs.next()) {
+				DrinkType drinkType = new DrinkType(rs.getInt("type_id"), rs.getString("name"), rs.getBytes("image"));
+				list.add(drinkType);
+			}
 
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-            if (rs.next()) {
-                drinkType = new DrinkType(
-                    rs.getInt("type_id"),
-                    rs.getString("name"),
-                    rs.getBytes("image")
-                );
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return drinkType;
-    }
-
-    // Actualitzar un tipus de beguda
-    public boolean updateDrinkType(DrinkType drinkType) {
-        String sql = "UPDATE drink_types SET name = ?, image = ? WHERE type_id = ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, drinkType.getName());
-            stmt.setBytes(2, drinkType.getImage());
-            stmt.setInt(3, drinkType.getTypeId());
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Eliminar un tipus de beguda
-    public boolean deleteDrinkType(int id) {
-        String sql = "DELETE FROM drink_types WHERE type_id = ?";
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
+		return list;
+	}
 }
-

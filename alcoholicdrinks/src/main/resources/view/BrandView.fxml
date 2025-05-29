@@ -6,34 +6,24 @@
 
 <VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.projecteprogramacio.controller.BrandController"
-      spacing="10">
-    
+      spacing="10"
+      alignment="TOP_CENTER">
+
     <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
+        <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
 
-    <TableView fx:id="brandTable" prefHeight="300" prefWidth="400">
+    <Label text="Llista de Marques" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="brandTable" prefHeight="400" prefWidth="500">
         <columns>
-            <TableColumn fx:id="colBrandId" text="Brand ID" prefWidth="100"/>
-            <TableColumn fx:id="colName" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="colCountryCode" text="Country Code" prefWidth="150"/>
+            <TableColumn fx:id="colBrandId" text="ID Marca" prefWidth="100"/>
+            <TableColumn fx:id="colName" text="Nom" prefWidth="200"/>
+            <TableColumn fx:id="colCountryCode" text="Codi País" prefWidth="200"/>
         </columns>
     </TableView>
 
-    <GridPane hgap="10" vgap="10">
-        <Label text="Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-        <Label text="Country Code:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="countryCodeField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-    </GridPane>
-
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="addButton" text="Add" onAction="#handleAddBrand"/>
-        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateBrand"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteBrand"/>
-    </HBox>
-
-    <Label fx:id="statusLabel" text="Status messages here" style="-fx-text-fill: red;"/>
+    <Label fx:id="statusLabel" text="" style="-fx-text-fill: green; -fx-font-style: italic;"/>
 
 </VBox>
+

@@ -2,39 +2,27 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.projecteprogramacio.controller.DrinkTypeController"
-      spacing="10">
+      spacing="10"
+      alignment="TOP_CENTER">
 
     <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
+        <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
 
-    <TableView fx:id="drinkTypeTable" prefHeight="300" prefWidth="400">
+    <Label text="Llista de Tipus de Beguda" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="drinkTypeTable" prefHeight="400" prefWidth="450" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colId" text="ID" prefWidth="100"/>
-            <TableColumn fx:id="colName" text="Name" prefWidth="300"/>
+            <TableColumn fx:id="colName" text="Nom" prefWidth="350"/>
         </columns>
     </TableView>
 
-    <GridPane hgap="10" vgap="10">
-        <Label text="Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-        <Label text="Image:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <ImageView fx:id="imageView" fitHeight="100" fitWidth="100" preserveRatio="true" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-        <Button text="Choose Image" onAction="#handleChooseImage" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-    </GridPane>
-
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="addButton" text="Add" onAction="#handleAddDrinkType"/>
-        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateDrinkType"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteDrinkType"/>
-    </HBox>
-
-    <Label fx:id="statusLabel" text="Status messages here" style="-fx-text-fill: red;"/>
+    <Label fx:id="statusLabel" text="" style="-fx-text-fill: green; -fx-font-style: italic;"/>
 
 </VBox>
+

@@ -1,67 +1,105 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<VBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1"
+<VBox xmlns="http://javafx.com/javafx/18"
+      xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.projecteprogramacio.controller.DrinkController"
-      spacing="10">
-    
+      spacing="15" style="-fx-background-color: #f5f5f5;"
+      alignment="TOP_CENTER">
+
     <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
+        <Insets top="20" right="30" bottom="20" left="30" />
     </padding>
 
-    <!-- Taula -->
-    <TableView fx:id="drinkTable" prefHeight="300" VBox.vgrow="ALWAYS">
+    <!-- Títol -->
+    <Label text="Gestió de Begudes"
+           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+
+    <!-- Taula que creix verticalment -->
+    <TableView fx:id="drinkTable" prefHeight="320"
+               VBox.vgrow="ALWAYS"
+               style="-fx-border-color: #bdc3c7; -fx-border-width: 1px;">
         <columns>
-            <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-            <TableColumn fx:id="colName" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="colAlcohol" text="Alcohol %" prefWidth="100"/>
-            <TableColumn fx:id="colPrice" text="Price (€)" prefWidth="100"/>
-            <TableColumn fx:id="colDescription" text="Description" prefWidth="200"/>
-            <TableColumn fx:id="colVolume" text="Volume (ml)" prefWidth="100"/>
-            <TableColumn fx:id="colTypeId" text="Type ID" prefWidth="80"/>
-            <TableColumn fx:id="colBrandId" text="Brand ID" prefWidth="80"/>
-            <TableColumn fx:id="colCountry" text="Country" prefWidth="80"/>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+            <TableColumn fx:id="colName" text="Nom" prefWidth="150" />
+            <TableColumn fx:id="colAlcohol" text="Alcohol %" prefWidth="90" />
+            <TableColumn fx:id="colPrice" text="Preu (€)" prefWidth="90" />
+            <TableColumn fx:id="colDescription" text="Descripció" prefWidth="200" />
+            <TableColumn fx:id="colVolume" text="Volum (ml)" prefWidth="90" />
+            <TableColumn fx:id="colType" text="Tipus" prefWidth="90" />
+            <TableColumn fx:id="colBrand" text="Marca" prefWidth="120" />
+            <TableColumn fx:id="colCountry" text="País" prefWidth="100" />
+            <TableColumn fx:id="colImage" text="Imatge" prefWidth="110" />
         </columns>
     </TableView>
 
-    <!-- Formulari -->
-    <GridPane hgap="10" vgap="10">
-        <Label text="Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <!-- Formulari en dues columnes, sense maxWidth per permetre creixement horitzontal -->
+    <GridPane hgap="15" vgap="12">
 
-        <Label text="Alcohol %:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="alcoholField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <!-- Columna esquerra -->
+        <Label text="Nom:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                   promptText="Nom de la beguda" />
 
-        <Label text="Price (€):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextField fx:id="priceField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label text="Alcohol %:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="alcoholField" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                   promptText="Percentatge d'alcohol" />
 
-        <Label text="Description:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="descriptionField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Label text="Preu (€):" GridPane.rowIndex="2" GridPane.columnIndex="0"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="priceField" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                   promptText="Preu en euros" />
 
-        <Label text="Volume (ml):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <TextField fx:id="volumeField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <Label text="Descripció:" GridPane.rowIndex="3" GridPane.columnIndex="0"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="descriptionField" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                   promptText="Descripció de la beguda" />
 
-        <Label text="Type ID:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-        <TextField fx:id="typeField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+        <!-- Columna dreta -->
+        <Label text="Volum (ml):" GridPane.rowIndex="0" GridPane.columnIndex="2"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="volumeField" GridPane.rowIndex="0" GridPane.columnIndex="3"
+                   promptText="Volum en mil·lilitres" />
 
-        <Label text="Brand ID:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-        <TextField fx:id="brandField" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+        <Label text="Tipus:" GridPane.rowIndex="1" GridPane.columnIndex="2"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="typeField" GridPane.rowIndex="1" GridPane.columnIndex="3"
+                   promptText="Nom del tipus de beguda" />
 
-        <Label text="Country:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-        <TextField fx:id="countryField" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+        <Label text="Marca:" GridPane.rowIndex="2" GridPane.columnIndex="2"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="brandField" GridPane.rowIndex="2" GridPane.columnIndex="3"
+                   promptText="Nom de la marca" />
+
+        <Label text="País:" GridPane.rowIndex="3" GridPane.columnIndex="2"
+               style="-fx-font-weight: bold;" />
+        <TextField fx:id="countryField" GridPane.rowIndex="3" GridPane.columnIndex="3"
+                   promptText="Nom del país" />
+
     </GridPane>
 
     <!-- Botons -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Afegir" fx:id="addButton" onAction="#handleAddDrink"/>
-        <Button text="Actualitzar" fx:id="updateButton" onAction="#handleUpdateDrink"/>
-        <Button text="Esborrar" fx:id="deleteButton" onAction="#handleDeleteDrink"/>
+    <HBox spacing="15" alignment="CENTER_RIGHT" maxWidth="600">
+        <padding>
+            <Insets top="10" right="0" bottom="0" left="0" />
+        </padding>
+        <Button text="Afegir" fx:id="addButton" onAction="#handleAddDrink"
+                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" />
+        <Button text="Actualitzar" fx:id="updateButton" onAction="#handleUpdateDrink"
+                style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" />
+        <Button text="Esborrar" fx:id="deleteButton" onAction="#handleDeleteDrink"
+                style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" />
     </HBox>
 
     <!-- Missatge d'estat -->
-    <Label fx:id="statusLabel" style="-fx-text-fill: red;"/>
+    <Label fx:id="statusLabel"
+           style="-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;" />
 
 </VBox>
+

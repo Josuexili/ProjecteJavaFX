@@ -1,10 +1,15 @@
 package com.projecteprogramacio.controller;
 
 import com.projecteprogramacio.dao.DrinkDAO;
+import com.projecteprogramacio.dao.DrinkTypeDAO;
+import com.projecteprogramacio.dao.BrandDAO;
 import com.projecteprogramacio.model.Drink;
 import com.projecteprogramacio.util.Database;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.beans.property.*;
@@ -12,6 +17,9 @@ import javafx.beans.property.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.io.ByteArrayInputStream;
 
 public class DrinkController {
 
@@ -22,9 +30,10 @@ public class DrinkController {
     @FXML private TableColumn<Drink, Double> colPrice;
     @FXML private TableColumn<Drink, String> colDescription;
     @FXML private TableColumn<Drink, Double> colVolume;
-    @FXML private TableColumn<Drink, Integer> colTypeId;
-    @FXML private TableColumn<Drink, Integer> colBrandId;
+    @FXML private TableColumn<Drink, String> colType;     // canvi de nom per claretat
+    @FXML private TableColumn<Drink, String> colBrand;    // canvi de nom per claretat
     @FXML private TableColumn<Drink, String> colCountry;
+    @FXML private TableColumn<Drink, ImageView> colImage;
 
     @FXML private TextField nameField;
     @FXML private TextField alcoholField;
@@ -42,17 +51,27 @@ public class DrinkController {
 
     private ObservableList<Drink> drinkList;
     private DrinkDAO drinkDAO;
+    private DrinkTypeDAO typeDAO;
+    private BrandDAO brandDAO;
+
+    private Map<Integer, String> typeNamesMap;
+    private Map<Integer, String> brandNamesMap;
 
     @FXML
     public void initialize() {
         Connection conn = null;
-		try {
-			conn = Database.getConnection();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // Assegura’t que la classe Database funciona correctament
+        try {
+            conn = Database.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            statusLabel.setText("Error en la connexió a la base de dades");
+            return;
+        }
         drinkDAO = new DrinkDAO(conn);
+        typeDAO = new DrinkTypeDAO(conn);      // <-- Aquí corregit
+        brandDAO = new BrandDAO(conn);
+
+    
 
         colId.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getDrinkId()).asObject());
         colName.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
@@ -60,9 +79,33 @@ public class DrinkController {
         colPrice.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getPrice()).asObject());
         colDescription.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDescription()));
         colVolume.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getVolume()).asObject());
-        colTypeId.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getTypeId()).asObject());
-        colBrandId.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getBrandId()).asObject());
+
+        // Ara mostrem noms, no ids:
+        colType.setCellValueFactory(cellData -> {
+            String typeName = typeNamesMap.get(cellData.getValue().getTypeId());
+            return new SimpleStringProperty(typeName != null ? typeName : "Desconegut");
+        });
+
+        colBrand.setCellValueFactory(cellData -> {
+            String brandName = brandNamesMap.get(cellData.getValue().getBrandId());
+            return new SimpleStringProperty(brandName != null ? brandName : "Desconegut");
+        });
+
         colCountry.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCountryCode()));
+
+        colImage.setCellValueFactory(cellData -> {
+            byte[] imageBytes = cellData.getValue().getImage();
+            if (imageBytes != null && imageBytes.length > 0) {
+                Image image = new Image(new ByteArrayInputStream(imageBytes));
+                ImageView imageView = new ImageView(image);
+                imageView.setFitWidth(60);
+                imageView.setFitHeight(60);
+                imageView.setPreserveRatio(true);
+                return new SimpleObjectProperty<>(imageView);
+            } else {
+                return new SimpleObjectProperty<>(null);
+            }
+        });
 
         drinkTable.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldSelection, newSelection) -> fillFormFields(newSelection)
@@ -70,6 +113,8 @@ public class DrinkController {
 
         loadDrinks();
     }
+
+
 
     private void loadDrinks() {
         List<Drink> drinks = drinkDAO.getAllDrinks();
@@ -190,4 +235,5 @@ public class DrinkController {
         countryField.clear();
     }
 }
+
 
