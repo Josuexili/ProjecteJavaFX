@@ -9,18 +9,45 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe DAO per gestionar l'accés a la taula tickets
+ * i realitzar operacions CRUD relacionades.
+ * <p>
+ * També gestiona les línies de tiquet mitjançant TicketLineDAO
+ * i s’encarrega de la gestió de transaccions.
+ * </p>
+ * 
+ * @author Josuè González
+ * @version 1.0
+ */
 public class TicketDAO {
 
+    /** Formatador de data i hora per SQLite */
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /** Connexió JDBC activa */
     private final Connection conn;
+
+    /** DAO per a les línies del tiquet */
     private final TicketLineDAO ticketLineDAO;
 
+    /**
+     * Constructor que inicialitza el DAO amb la connexió a la base de dades.
+     * 
+     * @param conn connexió JDBC activa
+     */
     public TicketDAO(Connection conn) {
         this.conn = conn;
         this.ticketLineDAO = new TicketLineDAO(conn);
     }
 
+    /**
+     * Insereix un nou tiquet amb les seves línies a la base de dades.
+     * La inserció és atòmica (transacció).
+     * 
+     * @param ticket tiquet a inserir
+     * @return {@code true} si la inserció ha estat correcta; {@code false} en cas contrari
+     */
     public boolean insertTicket(Ticket ticket) {
         String sql = "INSERT INTO tickets (user_id, total, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
         String now = LocalDateTime.now().format(formatter);
@@ -42,7 +69,7 @@ public class TicketDAO {
                 }
             }
 
-            // Obtenir l'ID generat per el ticket inserit
+            // Obtenir l'ID generat pel ticket inserit
             try (Statement idStmt = conn.createStatement();
                  ResultSet generatedKeys = idStmt.executeQuery("SELECT last_insert_rowid()")) {
                 if (generatedKeys.next()) {
@@ -83,6 +110,11 @@ public class TicketDAO {
         }
     }
 
+    /**
+     * Obté tots els tiquets ordenats per data de creació descendent.
+     * 
+     * @return llista de tiquets
+     */
     public List<Ticket> getAllTickets() {
         List<Ticket> tickets = new ArrayList<>();
         String sql = "SELECT * FROM tickets ORDER BY created_at DESC";
@@ -99,7 +131,6 @@ public class TicketDAO {
                         rs.getString("created_at"),
                         rs.getString("updated_at")
                 );
-                // Carregar línies associades
                 ticket.setLines(ticketLineDAO.getLinesByTicketId(ticket.getTicketId()));
                 tickets.add(ticket);
             }
@@ -111,6 +142,12 @@ public class TicketDAO {
         return tickets;
     }
 
+    /**
+     * Obté un tiquet pel seu identificador.
+     * 
+     * @param ticketId identificador del tiquet
+     * @return el tiquet corresponent o {@code null} si no existeix
+     */
     public Ticket getTicketById(int ticketId) {
         String sql = "SELECT * FROM tickets WHERE ticket_id = ?";
 
@@ -137,6 +174,13 @@ public class TicketDAO {
         return null;
     }
 
+    /**
+     * Actualitza un tiquet i les seves línies associades.
+     * La operació és atòmica.
+     * 
+     * @param ticket tiquet amb les dades actualitzades
+     * @return {@code true} si l'actualització ha tingut èxit; {@code false} en cas contrari
+     */
     public boolean updateTicket(Ticket ticket) {
         String sql = "UPDATE tickets SET user_id = ?, total = ?, status = ?, updated_at = ? WHERE ticket_id = ?";
         String now = LocalDateTime.now().format(formatter);
@@ -158,13 +202,11 @@ public class TicketDAO {
                 }
             }
 
-            // Eliminar línies antigues del ticket
             if (!ticketLineDAO.deleteLinesByTicketId(ticket.getTicketId())) {
                 conn.rollback();
                 return false;
             }
 
-            // Inserir línies noves
             for (TicketLine line : ticket.getLines()) {
                 line.setTicketId(ticket.getTicketId());
                 if (!ticketLineDAO.insertLine(line)) {
@@ -193,11 +235,17 @@ public class TicketDAO {
         }
     }
 
+    /**
+     * Elimina un tiquet i les seves línies associades.
+     * La eliminació és atòmica.
+     * 
+     * @param ticketId identificador del tiquet a eliminar
+     * @return {@code true} si la eliminació ha tingut èxit; {@code false} en cas contrari
+     */
     public boolean deleteTicket(int ticketId) {
         try {
             conn.setAutoCommit(false);
 
-            // Esborra les línies relacionades primer
             if (!ticketLineDAO.deleteLinesByTicketId(ticketId)) {
                 conn.rollback();
                 return false;
@@ -232,6 +280,12 @@ public class TicketDAO {
         }
     }
 
+    /**
+     * Obté els tiquets que tenen un estat concret.
+     * 
+     * @param status estat dels tiquets a filtrar
+     * @return llista de tiquets amb l'estat especificat
+     */
     public List<Ticket> getTicketsByStatus(String status) {
         List<Ticket> tickets = new ArrayList<>();
         String sql = "SELECT * FROM tickets WHERE status = ? ORDER BY created_at DESC";
@@ -259,6 +313,12 @@ public class TicketDAO {
         return tickets;
     }
 
+    /**
+     * Actualitza l’estat d’un tiquet.
+     * 
+     * @param ticketId identificador del tiquet
+     * @param newStatus nou estat per al tiquet
+     */
     public void updateTicketStatus(int ticketId, String newStatus) {
         String sql = "UPDATE tickets SET status = ?, updated_at = ? WHERE ticket_id = ?";
         String now = LocalDateTime.now().format(formatter);
@@ -276,4 +336,5 @@ public class TicketDAO {
         }
     }
 }
+
 

@@ -5,14 +5,33 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe DAO per gestionar l'accés a la taula `drinks` de la base de dades.
+ * Proporciona operacions CRUD i funcionalitats de cerca i obtenció de begudes.
+ * 
+ * @author Josuè González
+ * @version 1.0
+ */
 public class DrinkDAO {
 
+    /** Connexió JDBC activa a la base de dades */
     private final Connection conn;
 
+    /**
+     * Constructor que inicialitza el DAO amb la connexió a la base de dades.
+     * 
+     * @param conn connexió JDBC activa
+     */
     public DrinkDAO(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * Insereix una nova beguda a la base de dades.
+     * 
+     * @param drink objecte Drink a inserir
+     * @return true si la inserció ha tingut èxit; false en cas contrari
+     */
     public boolean insertDrink(Drink drink) {
         String sql = "INSERT INTO drinks (name, type_id, brand_id, country_code, alcohol_content, " +
                      "description, volume, price, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -36,6 +55,12 @@ public class DrinkDAO {
         }
     }
 
+    /**
+     * Actualitza les dades d'una beguda existent a la base de dades.
+     * 
+     * @param drink objecte Drink amb les dades actualitzades (ha de tenir l'id correcte)
+     * @return true si l'actualització ha tingut èxit; false en cas contrari
+     */
     public boolean updateDrink(Drink drink) {
         String sql = "UPDATE drinks SET name=?, type_id=?, brand_id=?, country_code=?, alcohol_content=?, " +
                      "description=?, volume=?, price=?, image=? WHERE drink_id=?";
@@ -60,6 +85,12 @@ public class DrinkDAO {
         }
     }
 
+    /**
+     * Elimina una beguda de la base de dades segons el seu identificador.
+     * 
+     * @param drinkId identificador de la beguda a eliminar
+     * @return true si l'eliminació ha tingut èxit; false en cas contrari
+     */
     public boolean deleteDrink(int drinkId) {
         String sql = "DELETE FROM drinks WHERE drink_id=?";
 
@@ -73,13 +104,19 @@ public class DrinkDAO {
         }
     }
 
+    /**
+     * Obté una beguda segons el seu identificador.
+     * 
+     * @param drinkId identificador de la beguda
+     * @return objecte Drink si es troba; null en cas contrari
+     */
     public Drink getDrinkById(int drinkId) {
         String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
                      "d.description, d.volume, d.price, d.image, " +
                      "b.name AS brandName, c.name AS countryName " +
                      "FROM drinks d " +
                      "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
-                     "LEFT JOIN countries c ON d.country_code = c.code " +
+                     "LEFT JOIN countries c ON d.country_code = c.country_code " +
                      "WHERE d.drink_id = ?";
 
         Drink drink = null;
@@ -99,6 +136,11 @@ public class DrinkDAO {
         return drink;
     }
 
+    /**
+     * Obté totes les begudes disponibles a la base de dades.
+     * 
+     * @return llista de tots els objectes Drink
+     */
     public List<Drink> getAllDrinks() {
         List<Drink> drinks = new ArrayList<>();
         String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
@@ -106,7 +148,7 @@ public class DrinkDAO {
                      "b.name AS brandName, c.name AS countryName " +
                      "FROM drinks d " +
                      "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
-                     "LEFT JOIN countries c ON d.country_code = c.code";
+                     "LEFT JOIN countries c ON d.country_code = c.country_code";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -122,6 +164,12 @@ public class DrinkDAO {
         return drinks;
     }
 
+    /**
+     * Cerca begudes pel seu nom que continguin un filtre de text.
+     * 
+     * @param nameFilter text a cercar dins el nom de la beguda
+     * @return llista de begudes que coincideixen amb el filtre; pot ser buida si no hi ha coincidències
+     */
     public List<Drink> searchDrinksByName(String nameFilter) {
         List<Drink> drinks = new ArrayList<>();
         String sql = "SELECT d.drink_id, d.name, d.type_id, d.brand_id, d.country_code, d.alcohol_content, " +
@@ -129,7 +177,7 @@ public class DrinkDAO {
                      "b.name AS brandName, c.name AS countryName " +
                      "FROM drinks d " +
                      "LEFT JOIN brands b ON d.brand_id = b.brand_id " +
-                     "LEFT JOIN countries c ON d.country_code = c.code " +
+                     "LEFT JOIN countries c ON d.country_code = c.country_code " +
                      "WHERE d.name LIKE ?";
 
         if (nameFilter == null || nameFilter.trim().isEmpty()) {
@@ -151,6 +199,13 @@ public class DrinkDAO {
         return drinks;
     }
 
+    /**
+     * Mètode auxiliar per extreure un objecte Drink del ResultSet.
+     * 
+     * @param rs ResultSet posicionat a la fila actual
+     * @return objecte Drink amb les dades extretes
+     * @throws SQLException en cas d'error d'accés al ResultSet
+     */
     private Drink extractDrinkFromResultSet(ResultSet rs) throws SQLException {
         Drink drink = new Drink(
             rs.getInt("drink_id"),
@@ -163,8 +218,8 @@ public class DrinkDAO {
             rs.getDouble("volume"),
             rs.getDouble("price"),
             rs.getBytes("image"),
-            rs.getString("brandName"),    // Nom marca
-            rs.getString("countryName")   // Nom país
+            rs.getString("brandName"),
+            rs.getString("countryName")
         );
         return drink;
     }

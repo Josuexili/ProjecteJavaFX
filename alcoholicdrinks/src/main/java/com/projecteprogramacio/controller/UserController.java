@@ -12,6 +12,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Controlador JavaFX per a la gestió d’usuaris.
+ * Aquesta classe s’encarrega de mostrar la taula d’usuaris, i de gestionar les accions de crear, actualitzar i eliminar usuaris.
+ */
 public class UserController {
 
     @FXML
@@ -49,9 +53,11 @@ public class UserController {
     // Guardem la contrasenya real temporalment per evitar mostrar-la
     private String currentPassword = "";
 
+    /**
+     * Inicialitza el controlador, configurant les columnes de la taula i carregant els usuaris des de la base de dades.
+     */
     @FXML
     public void initialize() {
-        // Inicialitza la connexió i el DAO
         try {
             Connection conn = Database.getConnection();
             userDAO = new UserDAO(conn);
@@ -61,11 +67,8 @@ public class UserController {
             return;
         }
 
-        // Configura les columnes
         colUserId.setCellValueFactory(
-                cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId())
-                        .asObject());
-
+                cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
         colUsername.setCellValueFactory(
                 cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUsername()));
         colEmail.setCellValueFactory(
@@ -73,7 +76,6 @@ public class UserController {
         colRole.setCellValueFactory(
                 cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRole()));
 
-        // Listener per actualitzar els camps quan es selecciona un usuari a la taula
         userTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 populateFields(newSelection);
@@ -85,17 +87,22 @@ public class UserController {
         loadUsers();
     }
 
-    // Mètode per omplir els camps de text amb l'usuari seleccionat
+    /**
+     * Omple els camps de text amb les dades de l’usuari seleccionat.
+     *
+     * @param user L’usuari seleccionat.
+     */
     private void populateFields(User user) {
         usernameField.setText(user.getUsername());
-        passwordField.clear();  // No posem res per seguretat
+        passwordField.clear(); // No es mostra la contrasenya per seguretat
         emailField.setText(user.getEmail());
         roleField.setText(user.getRole());
-        currentPassword = user.getPassword();  // <-- guardar la contrasenya actual aquí
+        currentPassword = user.getPassword(); // Es guarda internament la contrasenya actual
     }
 
-
-
+    /**
+     * Carrega tots els usuaris des de la base de dades i actualitza la taula.
+     */
     private void loadUsers() {
         try {
             List<User> users = userDAO.getAllUsers();
@@ -108,6 +115,10 @@ public class UserController {
         }
     }
 
+    /**
+     * Gestiona l’acció d’afegir un nou usuari a la base de dades.
+     * Aquest mètode es crida quan es fa clic al botó "Afegir".
+     */
     @FXML
     private void handleAddUser() {
         String username = usernameField.getText().trim();
@@ -120,10 +131,7 @@ public class UserController {
             return;
         }
 
-        // Per simplificar, utilitzem el mateix temps per created_at, last_login,
-        // last_logout
         String now = java.time.LocalDateTime.now().toString();
-
         User newUser = new User(0, username, password, email, now, now, now, role);
 
         try {
@@ -141,6 +149,10 @@ public class UserController {
         }
     }
 
+    /**
+     * Gestiona l’acció d’actualitzar un usuari seleccionat.
+     * Aquest mètode es crida quan es fa clic al botó "Actualitzar".
+     */
     @FXML
     private void handleUpdateUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -166,7 +178,7 @@ public class UserController {
         if (!password.isEmpty()) {
             selectedUser.setPassword(password);
         } else {
-            selectedUser.setPassword(currentPassword);  // <-- manté contrasenya antiga si no s'ha escrit res
+            selectedUser.setPassword(currentPassword); // Es manté la contrasenya anterior
         }
 
         try {
@@ -184,6 +196,10 @@ public class UserController {
         }
     }
 
+    /**
+     * Gestiona l’acció d’eliminar l’usuari seleccionat de la taula i de la base de dades.
+     * Aquest mètode es crida quan es fa clic al botó "Eliminar".
+     */
     @FXML
     private void handleDeleteUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -206,6 +222,9 @@ public class UserController {
         }
     }
 
+    /**
+     * Esborra tots els camps d’entrada i desselecciona la fila de la taula.
+     */
     private void clearInputFields() {
         usernameField.clear();
         passwordField.clear();
@@ -215,4 +234,3 @@ public class UserController {
         userTable.getSelectionModel().clearSelection();
     }
 }
-

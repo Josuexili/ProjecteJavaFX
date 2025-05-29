@@ -16,6 +16,11 @@ public class BrandDAO {
     
 
     public int getIdOrInsert(String brandName, String countryCode) {
+        // Assegura countryCode no null ni buit
+        if (countryCode == null || countryCode.trim().isEmpty()) {
+            countryCode = "XX";  // codi per defecte
+        }
+
         try {
             // Comprova si la marca ja existeix
             String selectSql = "SELECT brand_id FROM brands WHERE name = ?";
@@ -27,22 +32,33 @@ public class BrandDAO {
                 }
             }
 
-            // Si no existeix, insereix-la
+            // Insereix la nova marca amb country_code vàlid
             String insertSql = "INSERT INTO brands (name, country_code) VALUES (?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
                 stmt.setString(1, brandName);
                 stmt.setString(2, countryCode);
-                stmt.executeUpdate();
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    try (Statement stmt2 = conn.createStatement();
+                         ResultSet rs2 = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                        if (rs2.next()) {
+                            return rs2.getInt(1);
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return -1; // error
     }
+
+
+
+
+
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
         String sql = "SELECT brand_id, name, country_code FROM brands";

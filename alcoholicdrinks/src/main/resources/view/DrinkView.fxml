@@ -19,7 +19,7 @@
     <Label text="Gestió de Begudes"
            style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
 
-    <!-- Taula que creix verticalment -->
+    <!-- Taula de begudes -->
     <TableView fx:id="drinkTable" prefHeight="320"
                VBox.vgrow="ALWAYS"
                style="-fx-border-color: #bdc3c7; -fx-border-width: 1px;">
@@ -37,7 +37,7 @@
         </columns>
     </TableView>
 
-    <!-- Formulari en dues columnes, sense maxWidth per permetre creixement horitzontal -->
+    <!-- Formulari per editar o afegir beguda -->
     <GridPane hgap="15" vgap="12">
 
         <!-- Columna esquerra -->
@@ -80,11 +80,11 @@
         <Label text="País:" GridPane.rowIndex="3" GridPane.columnIndex="2"
                style="-fx-font-weight: bold;" />
         <TextField fx:id="countryField" GridPane.rowIndex="3" GridPane.columnIndex="3"
-                   promptText="Nom del país" />
+                   promptText="Nom del país (majúscules)" />
 
     </GridPane>
 
-    <!-- Botons -->
+    <!-- Botons d'acció -->
     <HBox spacing="15" alignment="CENTER_RIGHT" maxWidth="600">
         <padding>
             <Insets top="10" right="0" bottom="0" left="0" />
