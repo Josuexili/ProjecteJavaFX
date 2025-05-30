@@ -32,423 +32,446 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 /**
- * Controlador per gestionar la visualització, creació, actualització i eliminació
- * de tiquets i línies de tiquet a l'aplicació.
+ * Controlador per gestionar la visualització, creació, actualització i
+ * eliminació de tiquets i línies de tiquet a l'aplicació.
  * <p>
- * Gestiona la interacció amb la base de dades a través dels DAO i actualitza
- * la vista JavaFX corresponent.
+ * Gestiona la interacció amb la base de dades a través dels DAO i actualitza la
+ * vista JavaFX corresponent.
  * </p>
  * 
- * @author 
+ * @author
  */
 public class TicketController {
 
-    @FXML private TableView<Ticket> ticketTable;
-    @FXML private TableColumn<Ticket, Integer> colTicketId, colUserId;
-    @FXML private TableColumn<Ticket, Double> colTotal;
-    @FXML private TableColumn<Ticket, String> colStatus, colCreatedAt, colUpdatedAt;
+	@FXML
+	private TableView<Ticket> ticketTable;
+	@FXML
+	private TableColumn<Ticket, Integer> colTicketId, colUserId;
+	@FXML
+	private TableColumn<Ticket, Double> colTotal;
+	@FXML
+	private TableColumn<Ticket, String> colStatus, colCreatedAt, colUpdatedAt;
 
-    @FXML private TextField userIdField, totalField, statusField;
-    @FXML private Button addButton, updateButton, deleteButton;
-    @FXML private Label statusLabel;
-    @FXML private Button goToCreateTicketButton;
+	@FXML
+	private TextField userIdField, totalField, statusField;
+	@FXML
+	private Button addButton, updateButton, deleteButton;
+	@FXML
+	private Label statusLabel;
+	@FXML
+	private Button goToCreateTicketButton;
 
-    @FXML private TableView<TicketLine> ticketLinesTable;
-    @FXML private TableColumn<TicketLine, Integer> colLineId, colProductId, colQuantity;
-    @FXML private TableColumn<TicketLine, Double> colPrice;
+	@FXML
+	private TableView<TicketLine> ticketLinesTable;
+	@FXML
+	private TableColumn<TicketLine, Integer> colLineId, colProductId, colQuantity;
+	@FXML
+	private TableColumn<TicketLine, Double> colPrice;
 
-    @FXML private TextField quantityField, priceField;
-    @FXML private ComboBox<Drink> drinkComboBox;
-    @FXML private Button addLineButton, deleteLineButton;
+	@FXML
+	private TextField quantityField, priceField;
+	@FXML
+	private ComboBox<Drink> drinkComboBox;
+	@FXML
+	private Button addLineButton, deleteLineButton;
 
-    private ObservableList<Ticket> ticketList;
-    private ObservableList<TicketLine> ticketLineList;
-    private TicketDAO ticketDAO;
-    private TicketLineDAO ticketLineDAO;
-    private DrinkDAO drinkDAO;
-    
-    private User loggedUser; // Usuari loguejat
+	private ObservableList<Ticket> ticketList;
+	private ObservableList<TicketLine> ticketLineList;
+	private TicketDAO ticketDAO;
+	private TicketLineDAO ticketLineDAO;
+	private DrinkDAO drinkDAO;
 
-    /**
-     * Estableix l'usuari que ha fet login.
-     * 
-     * @param user Usuari loguejat
-     */
-    public void setLoggedUser(User user) {
-        this.loggedUser = user;
-    }
+	private User loggedUser; // Usuari loguejat
 
-    /**
-     * Inicialitza el controlador. Estableix la connexió amb la base de dades,
-     * configura les taules i combobox, i carrega les dades inicials.
-     */
-    @FXML
-    public void initialize() {
-        try {
-            Connection conn = Database.getConnection();
-            ticketDAO = new TicketDAO(conn);
-            ticketLineDAO = new TicketLineDAO(conn);
-            drinkDAO = new DrinkDAO(conn);
-        } catch (Exception e) {
-            statusLabel.setText("Error en la connexió a la base de dades.");
-            e.printStackTrace();
-            disableAllButtons();
-            return;
-        }
-        
-        setupTicketTable();
-        setupLineTable();
-        setupDrinkComboBox();
+	/**
+	 * Estableix l'usuari que ha fet login.
+	 * 
+	 * @param user Usuari loguejat
+	 */
+	public void setLoggedUser(User user) {
+		this.loggedUser = user;
+	}
 
-        loadTickets();
-        clearFields();
-        clearTicketLines();
-        disableLineButtons(true);
+	/**
+	 * Inicialitza el controlador. Estableix la connexió amb la base de dades,
+	 * configura les taules i combobox, i carrega les dades inicials.
+	 */
+	@FXML
+	public void initialize() {
+		try {
+			Connection conn = Database.getConnection();
+			ticketDAO = new TicketDAO(conn);
+			ticketLineDAO = new TicketLineDAO(conn);
+			drinkDAO = new DrinkDAO(conn);
+		} catch (Exception e) {
+			statusLabel.setText("Error en la connexió a la base de dades.");
+			e.printStackTrace();
+			disableAllButtons();
+			return;
+		}
 
-        ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null) {
-                populateFields(newSel);
-                loadTicketLines(newSel.getTicketId());
-            } else {
-                clearFields();
-                clearTicketLines();
-            }
-        });
-    }
+		setupTicketTable();
+		setupLineTable();
+		setupDrinkComboBox();
 
-    /**
-     * Configura les columnes de la taula de tiquets amb els valors corresponents.
-     */
-    private void setupTicketTable() {
-        colTicketId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketId()).asObject());
-        colUserId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getUserId()).asObject());
-        colTotal.setCellValueFactory(cell -> new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getTotal()).asObject());
-        colStatus.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus()));
-        colCreatedAt.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getCreatedAt()));
-        colUpdatedAt.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getUpdatedAt()));
-    }
+		loadTickets();
+		clearFields();
+		clearTicketLines();
+		disableLineButtons(true);
 
-    /**
-     * Configura les columnes de la taula de línies de tiquet.
-     */
-    private void setupLineTable() {
-        colLineId.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketLineId()).asObject());
-        colProductId.setCellValueFactory(cell -> {
-            Drink drink = cell.getValue().getDrink();
-            return new javafx.beans.property.SimpleIntegerProperty(drink != null ? drink.getDrinkId() : 0).asObject();
-        });
-        colQuantity.setCellValueFactory(cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getQuantity()).asObject());
-        colPrice.setCellValueFactory(cell -> {
-            Drink drink = cell.getValue().getDrink();
-            return new javafx.beans.property.SimpleDoubleProperty(drink != null ? drink.getPrice() : 0.0).asObject();
-        });
-    }
+		ticketTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+			if (newSel != null) {
+				populateFields(newSel);
+				loadTicketLines(newSel.getTicketId());
+			} else {
+				clearFields();
+				clearTicketLines();
+			}
+		});
+	}
 
-    /**
-     * Configura el ComboBox de begudes i gestiona la visualització dels noms i actualització del preu.
-     */
-    private void setupDrinkComboBox() {
-        List<Drink> drinks = drinkDAO.getAllDrinks();
-        drinkComboBox.setItems(FXCollections.observableArrayList(drinks));
+	/**
+	 * Configura les columnes de la taula de tiquets amb els valors corresponents.
+	 */
+	private void setupTicketTable() {
+		colTicketId.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketId()).asObject());
+		colUserId.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getUserId()).asObject());
+		colTotal.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getTotal()).asObject());
+		colStatus.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus()));
+		colCreatedAt.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getCreatedAt()));
+		colUpdatedAt.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getUpdatedAt()));
+	}
 
-        drinkComboBox.setCellFactory(cb -> new ListCell<>() {
-            @Override
-            protected void updateItem(Drink drink, boolean empty) {
-                super.updateItem(drink, empty);
-                setText(empty || drink == null ? "" : drink.getName());
-            }
-        });
+	/**
+	 * Configura les columnes de la taula de línies de tiquet.
+	 */
+	private void setupLineTable() {
+		colLineId.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getTicketLineId()).asObject());
+		colProductId.setCellValueFactory(cell -> {
+			Drink drink = cell.getValue().getDrink();
+			return new javafx.beans.property.SimpleIntegerProperty(drink != null ? drink.getDrinkId() : 0).asObject();
+		});
+		colQuantity.setCellValueFactory(
+				cell -> new javafx.beans.property.SimpleIntegerProperty(cell.getValue().getQuantity()).asObject());
+		colPrice.setCellValueFactory(cell -> {
+			Drink drink = cell.getValue().getDrink();
+			return new javafx.beans.property.SimpleDoubleProperty(drink != null ? drink.getPrice() : 0.0).asObject();
+		});
+	}
 
-        drinkComboBox.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Drink drink, boolean empty) {
-                super.updateItem(drink, empty);
-                setText(empty || drink == null ? "" : drink.getName());
-            }
-        });
+	/**
+	 * Configura el ComboBox de begudes i gestiona la visualització dels noms i
+	 * actualització del preu.
+	 */
+	private void setupDrinkComboBox() {
+		List<Drink> drinks = drinkDAO.getAllDrinks();
+		drinkComboBox.setItems(FXCollections.observableArrayList(drinks));
 
-        drinkComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldDrink, newDrink) -> {
-            priceField.setText(newDrink != null ? String.format(Locale.US, "%.2f", newDrink.getPrice()) : "");
-        });
-    }
+		drinkComboBox.setCellFactory(cb -> new ListCell<>() {
+			@Override
+			protected void updateItem(Drink drink, boolean empty) {
+				super.updateItem(drink, empty);
+				setText(empty || drink == null ? "" : drink.getName());
+			}
+		});
 
-    /**
-     * Deshabilita tots els botons per evitar interaccions.
-     */
-    private void disableAllButtons() {
-        addButton.setDisable(true);
-        updateButton.setDisable(true);
-        deleteButton.setDisable(true);
-        disableLineButtons(true);
-    }
+		drinkComboBox.setButtonCell(new ListCell<>() {
+			@Override
+			protected void updateItem(Drink drink, boolean empty) {
+				super.updateItem(drink, empty);
+				setText(empty || drink == null ? "" : drink.getName());
+			}
+		});
 
-    /**
-     * Activa o desactiva els botons relacionats amb les línies de tiquet.
-     * 
-     * @param disable true per deshabilitar, false per habilitar
-     */
-    private void disableLineButtons(boolean disable) {
-        addLineButton.setDisable(disable);
-        deleteLineButton.setDisable(disable);
-    }
+		drinkComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldDrink, newDrink) -> {
+			priceField.setText(newDrink != null ? String.format(Locale.US, "%.2f", newDrink.getPrice()) : "");
+		});
+	}
 
-    /**
-     * Omple els camps de text amb les dades del tiquet seleccionat.
-     * 
-     * @param ticket tiquet seleccionat
-     */
-    private void populateFields(Ticket ticket) {
-        userIdField.setText(String.valueOf(ticket.getUserId()));
-        totalField.setText(String.format(Locale.US, "%.2f", ticket.getTotal()));
-        statusField.setText(ticket.getStatus());
-        disableLineButtons(false);
-    }
+	/**
+	 * Deshabilita tots els botons per evitar interaccions.
+	 */
+	private void disableAllButtons() {
+		addButton.setDisable(true);
+		updateButton.setDisable(true);
+		deleteButton.setDisable(true);
+		disableLineButtons(true);
+	}
 
-    /**
-     * Neteja els camps de text dels tiquets i deshabilita els botons de línies.
-     */
-    private void clearFields() {
-        userIdField.clear();
-        totalField.clear();
-        statusField.clear();
-        disableLineButtons(true);
-    }
+	/**
+	 * Activa o desactiva els botons relacionats amb les línies de tiquet.
+	 * 
+	 * @param disable true per deshabilitar, false per habilitar
+	 */
+	private void disableLineButtons(boolean disable) {
+		addLineButton.setDisable(disable);
+		deleteLineButton.setDisable(disable);
+	}
 
-    /**
-     * Carrega tots els tiquets de la base de dades i els mostra a la taula.
-     */
-    private void loadTickets() {
-        ticketList = FXCollections.observableArrayList(ticketDAO.getAllTickets());
-        ticketTable.setItems(ticketList);
-        statusLabel.setText("Tiquets carregats.");
-    }
+	/**
+	 * Omple els camps de text amb les dades del tiquet seleccionat.
+	 * 
+	 * @param ticket tiquet seleccionat
+	 */
+	private void populateFields(Ticket ticket) {
+		userIdField.setText(String.valueOf(ticket.getUserId()));
+		totalField.setText(String.format(Locale.US, "%.2f", ticket.getTotal()));
+		statusField.setText(ticket.getStatus());
+		disableLineButtons(false);
+	}
 
-    /**
-     * Carrega les línies de tiquet associades a un tiquet concret i les mostra a la taula.
-     * 
-     * @param ticketId identificador del tiquet
-     */
-    private void loadTicketLines(int ticketId) {
-        ticketLineList = FXCollections.observableArrayList(ticketLineDAO.getLinesByTicketId(ticketId));
-        ticketLinesTable.setItems(ticketLineList);
-    }
+	/**
+	 * Neteja els camps de text dels tiquets i deshabilita els botons de línies.
+	 */
+	private void clearFields() {
+		userIdField.clear();
+		totalField.clear();
+		statusField.clear();
+		disableLineButtons(true);
+	}
 
-    /**
-     * Neteja la taula de línies de tiquet.
-     */
-    private void clearTicketLines() {
-        if (ticketLineList != null)
-            ticketLineList.clear();
-        ticketLinesTable.setItems(FXCollections.observableArrayList());
-    }
+	/**
+	 * Carrega tots els tiquets de la base de dades i els mostra a la taula.
+	 */
+	private void loadTickets() {
+		ticketList = FXCollections.observableArrayList(ticketDAO.getAllTickets());
+		ticketTable.setItems(ticketList);
+		statusLabel.setText("Tiquets carregats.");
+	}
 
-    /**
-     * Gestiona l'acció de afegir un nou tiquet a la base de dades.
-     */
-    @FXML
-    private void handleAddTicket() {
-        try {
-            int userId = Integer.parseInt(userIdField.getText().trim());
-            double total = Double.parseDouble(totalField.getText().trim());
-            String status = statusField.getText().trim();
+	/**
+	 * Carrega les línies de tiquet associades a un tiquet concret i les mostra a la
+	 * taula.
+	 * 
+	 * @param ticketId identificador del tiquet
+	 */
+	private void loadTicketLines(int ticketId) {
+		ticketLineList = FXCollections.observableArrayList(ticketLineDAO.getLinesByTicketId(ticketId));
+		ticketLinesTable.setItems(ticketLineList);
+	}
 
-            if (status.isEmpty()) {
-                statusLabel.setText("L'estat no pot estar buit.");
-                return;
-            }
+	/**
+	 * Neteja la taula de línies de tiquet.
+	 */
+	private void clearTicketLines() {
+		if (ticketLineList != null)
+			ticketLineList.clear();
+		ticketLinesTable.setItems(FXCollections.observableArrayList());
+	}
 
-            Ticket newTicket = new Ticket(0, userId, total, status, null, null);
-            if (ticketDAO.insertTicket(newTicket)) {
-                statusLabel.setText("Tiquet afegit correctament.");
-                loadTickets();
-                clearFields();
-            } else {
-                statusLabel.setText("Error en afegir tiquet.");
-            }
-        } catch (NumberFormatException e) {
-            statusLabel.setText("UserId o Total no vàlids.");
-        }
-    }
+	/**
+	 * Gestiona l'acció de afegir un nou tiquet a la base de dades.
+	 */
+	@FXML
+	private void handleAddTicket() {
+		try {
+			int userId = Integer.parseInt(userIdField.getText().trim());
+			double total = Double.parseDouble(totalField.getText().trim());
+			String status = statusField.getText().trim();
 
-    /**
-     * Gestiona l'acció d'actualitzar un tiquet existent.
-     */
-    @FXML
-    private void handleUpdateTicket() {
-        Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            statusLabel.setText("Selecciona un tiquet.");
-            return;
-        }
+			if (status.isEmpty()) {
+				statusLabel.setText("L'estat no pot estar buit.");
+				return;
+			}
 
-        try {
-            int userId = Integer.parseInt(userIdField.getText().trim());
-            double total = Double.parseDouble(totalField.getText().trim());
-            String status = statusField.getText().trim();
+			Ticket newTicket = new Ticket(0, userId, total, status, null, null);
+			if (ticketDAO.insertTicket(newTicket)) {
+				statusLabel.setText("Tiquet afegit correctament.");
+				loadTickets();
+				clearFields();
+			} else {
+				statusLabel.setText("Error en afegir tiquet.");
+			}
+		} catch (NumberFormatException e) {
+			statusLabel.setText("UserId o Total no vàlids.");
+		}
+	}
 
-            if (status.isEmpty()) {
-                statusLabel.setText("L'estat no pot estar buit.");
-                return;
-            }
+	/**
+	 * Gestiona l'acció d'actualitzar un tiquet existent.
+	 */
+	@FXML
+	private void handleUpdateTicket() {
+		Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
+		if (selected == null) {
+			statusLabel.setText("Selecciona un tiquet.");
+			return;
+		}
 
-            selected.setUserId(userId);
-            selected.setTotal(total);
-            selected.setStatus(status);
+		try {
+			int userId = Integer.parseInt(userIdField.getText().trim());
+			double total = Double.parseDouble(totalField.getText().trim());
+			String status = statusField.getText().trim();
 
-            if (ticketDAO.updateTicket(selected)) {
-                statusLabel.setText("Tiquet actualitzat.");
-                loadTickets();
-                clearFields();
-            } else {
-                statusLabel.setText("Error en actualitzar tiquet.");
-            }
-        } catch (NumberFormatException e) {
-            statusLabel.setText("UserId o Total no vàlids.");
-        }
-    }
+			if (status.isEmpty()) {
+				statusLabel.setText("L'estat no pot estar buit.");
+				return;
+			}
 
-    /**
-     * Gestiona l'acció d'eliminar un tiquet seleccionat.
-     */
-    @FXML
-    private void handleDeleteTicket() {
-        Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            statusLabel.setText("Selecciona un tiquet.");
-            return;
-        }
+			selected.setUserId(userId);
+			selected.setTotal(total);
+			selected.setStatus(status);
 
-        if (ticketDAO.deleteTicket(selected.getTicketId())) {
-            statusLabel.setText("Tiquet eliminat.");
-            loadTickets();
-            clearFields();
-            clearTicketLines();
-        } else {
-            statusLabel.setText("Error en eliminar tiquet.");
-        }
-    }
+			if (ticketDAO.updateTicket(selected)) {
+				statusLabel.setText("Tiquet actualitzat.");
+				loadTickets();
+				clearFields();
+			} else {
+				statusLabel.setText("Error en actualitzar tiquet.");
+			}
+		} catch (NumberFormatException e) {
+			statusLabel.setText("UserId o Total no vàlids.");
+		}
+	}
 
-    /**
-     * Gestiona l'acció d'afegir una línia nova a un tiquet seleccionat.
-     * 
-     * @throws SQLException si hi ha un error a la base de dades
-     */
-    @FXML
-    private void handleAddLine() throws SQLException {
-        Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
-        if (selectedTicket == null) {
-            statusLabel.setText("Selecciona un tiquet.");
-            return;
-        }
+	/**
+	 * Gestiona l'acció d'eliminar un tiquet seleccionat.
+	 */
+	@FXML
+	private void handleDeleteTicket() {
+		Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
+		if (selected == null) {
+			statusLabel.setText("Selecciona un tiquet.");
+			return;
+		}
 
-        try {
-            Drink drink = drinkComboBox.getValue();
-            if (drink == null) {
-                statusLabel.setText("Selecciona una beguda.");
-                return;
-            }
+		if (ticketDAO.deleteTicket(selected.getTicketId())) {
+			statusLabel.setText("Tiquet eliminat.");
+			loadTickets();
+			clearFields();
+			clearTicketLines();
+		} else {
+			statusLabel.setText("Error en eliminar tiquet.");
+		}
+	}
 
-            int quantity = Integer.parseInt(quantityField.getText().trim());
-            if (quantity <= 0) {
-                statusLabel.setText("Quantitat ha de ser > 0.");
-                return;
-            }
+	/**
+	 * Gestiona l'acció d'afegir una línia nova a un tiquet seleccionat.
+	 * 
+	 * @throws SQLException si hi ha un error a la base de dades
+	 */
+	@FXML
+	private void handleAddLine() throws SQLException {
+		Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
+		if (selectedTicket == null) {
+			statusLabel.setText("Selecciona un tiquet.");
+			return;
+		}
 
-            TicketLine line = new TicketLine(0, selectedTicket.getTicketId(), drink, quantity);
-            if (ticketLineDAO.insertLine(line)) {
-                statusLabel.setText("Línia afegida.");
-                loadTicketLines(selectedTicket.getTicketId());
-                updateTicketTotal(selectedTicket.getTicketId());
-                clearLineFields();
-            } else {
-                statusLabel.setText("Error en afegir línia.");
-            }
-        } catch (NumberFormatException e) {
-            statusLabel.setText("Quantitat no vàlida.");
-        }
-    }
+		try {
+			Drink drink = drinkComboBox.getValue();
+			if (drink == null) {
+				statusLabel.setText("Selecciona una beguda.");
+				return;
+			}
 
-    /**
-     * Gestiona l'acció d'eliminar una línia seleccionada d'un tiquet.
-     */
-    @FXML
-    private void handleDeleteLine() {
-        Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
-        TicketLine selectedLine = ticketLinesTable.getSelectionModel().getSelectedItem();
-        if (selectedTicket == null || selectedLine == null) {
-            statusLabel.setText("Selecciona tiquet i línia.");
-            return;
-        }
+			int quantity = Integer.parseInt(quantityField.getText().trim());
+			if (quantity <= 0) {
+				statusLabel.setText("Quantitat ha de ser > 0.");
+				return;
+			}
 
-        if (ticketLineDAO.deleteLine(selectedLine.getTicketLineId())) {
-            statusLabel.setText("Línia eliminada.");
-            loadTicketLines(selectedTicket.getTicketId());
-            updateTicketTotal(selectedTicket.getTicketId());
-        } else {
-            statusLabel.setText("Error en eliminar línia.");
-        }
-    }
+			TicketLine line = new TicketLine(0, selectedTicket.getTicketId(), drink, quantity);
+			if (ticketLineDAO.insertLine(line)) {
+				statusLabel.setText("Línia afegida.");
+				loadTicketLines(selectedTicket.getTicketId());
+				updateTicketTotal(selectedTicket.getTicketId());
+				clearLineFields();
+			} else {
+				statusLabel.setText("Error en afegir línia.");
+			}
+		} catch (NumberFormatException e) {
+			statusLabel.setText("Quantitat no vàlida.");
+		}
+	}
 
-    /**
-     * Actualitza el total del tiquet sumant el preu de totes les seves línies.
-     * 
-     * @param ticketId id del tiquet a actualitzar
-     */
-    private void updateTicketTotal(int ticketId) {
-        try {
-            List<TicketLine> lines = ticketLineDAO.getLinesByTicketId(ticketId);
-            double newTotal = 0.0;
-            for (TicketLine line : lines) {
-                Drink drink = line.getDrink();
-                if (drink != null) {
-                    newTotal += drink.getPrice() * line.getQuantity();
-                }
-            }
+	/**
+	 * Gestiona l'acció d'eliminar una línia seleccionada d'un tiquet.
+	 */
+	@FXML
+	private void handleDeleteLine() {
+		Ticket selectedTicket = ticketTable.getSelectionModel().getSelectedItem();
+		TicketLine selectedLine = ticketLinesTable.getSelectionModel().getSelectedItem();
+		if (selectedTicket == null || selectedLine == null) {
+			statusLabel.setText("Selecciona tiquet i línia.");
+			return;
+		}
 
-            Ticket ticket = ticketDAO.getTicketById(ticketId);
-            if (ticket != null) {
-                ticket.setTotal(newTotal);
-                ticketDAO.updateTicket(ticket);
-                loadTickets();
-                ticketTable.getSelectionModel().select(ticket);
-                populateFields(ticket);
-            }
-        } catch (Exception e) {
-            statusLabel.setText("Error en actualitzar total.");
-            e.printStackTrace();
-        }
-    }
+		if (ticketLineDAO.deleteLine(selectedLine.getTicketLineId())) {
+			statusLabel.setText("Línia eliminada.");
+			loadTicketLines(selectedTicket.getTicketId());
+			updateTicketTotal(selectedTicket.getTicketId());
+		} else {
+			statusLabel.setText("Error en eliminar línia.");
+		}
+	}
 
-    /**
-     * Neteja els camps relacionats amb la línia de tiquet (beguda, quantitat i preu).
-     */
-    private void clearLineFields() {
-        drinkComboBox.getSelectionModel().clearSelection();
-        quantityField.clear();
-        priceField.clear();
-    }
+	/**
+	 * Actualitza el total del tiquet sumant el preu de totes les seves línies.
+	 * 
+	 * @param ticketId id del tiquet a actualitzar
+	 */
+	private void updateTicketTotal(int ticketId) {
+		try {
+			List<TicketLine> lines = ticketLineDAO.getLinesByTicketId(ticketId);
+			double newTotal = 0.0;
+			for (TicketLine line : lines) {
+				Drink drink = line.getDrink();
+				if (drink != null) {
+					newTotal += drink.getPrice() * line.getQuantity();
+				}
+			}
 
-    /**
-     * Canvia la vista a la pantalla de creació de tiquets.
-     */
-    @FXML
-    private void handleGoToCreateTicket() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketCreation.fxml"));
-            Parent view = loader.load();
+			Ticket ticket = ticketDAO.getTicketById(ticketId);
+			if (ticket != null) {
+				ticket.setTotal(newTotal);
+				ticketDAO.updateTicket(ticket);
+				loadTickets();
+				ticketTable.getSelectionModel().select(ticket);
+				populateFields(ticket);
+			}
+		} catch (Exception e) {
+			statusLabel.setText("Error en actualitzar total.");
+			e.printStackTrace();
+		}
+	}
 
-            Stage stage = (Stage) goToCreateTicketButton.getScene().getWindow();
-            Scene scene = new Scene(view); // nova escena amb el nou FXML
+	/**
+	 * Neteja els camps relacionats amb la línia de tiquet (beguda, quantitat i
+	 * preu).
+	 */
+	private void clearLineFields() {
+		drinkComboBox.getSelectionModel().clearSelection();
+		quantityField.clear();
+		priceField.clear();
+	}
 
-            stage.setScene(scene);
-            stage.show();
+	/**
+	 * Canvia la vista a la pantalla de creació de tiquets.
+	 */
+	@FXML
+	private void handleGoToCreateTicket() {
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketCreation.fxml"));
+			Parent view = loader.load();
 
-        } catch (IOException e) {
-            statusLabel.setText("Error en obrir vista de creació.");
-            e.printStackTrace();
-        }
-    }
+			Stage stage = (Stage) goToCreateTicketButton.getScene().getWindow();
+			Scene scene = new Scene(view); // nova escena amb el nou FXML
 
+			stage.setScene(scene);
+			stage.show();
+
+		} catch (IOException e) {
+			statusLabel.setText("Error en obrir vista de creació.");
+			e.printStackTrace();
+		}
+	}
 
 }
-
