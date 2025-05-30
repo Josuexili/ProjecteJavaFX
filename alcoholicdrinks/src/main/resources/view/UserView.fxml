@@ -36,11 +36,15 @@
     </GridPane>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="addButton" text="Add" onAction="#handleAddUser"/>
-        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateUser"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteUser"/>
+        <Button fx:id="addButton" text="Add" onAction="#handleAddUser"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateUser"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteUser"
+                style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
     </HBox>
 
     <Label fx:id="statusLabel" text="" />
 
 </VBox>
+

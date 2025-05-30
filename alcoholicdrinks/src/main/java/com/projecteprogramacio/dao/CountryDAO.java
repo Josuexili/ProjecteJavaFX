@@ -39,7 +39,7 @@ public class CountryDAO {
         String selectSql = "SELECT country_code FROM countries WHERE country_code = ?";
         String insertSql = "INSERT INTO countries (country_code, name) VALUES (?, ?)";
 
-        try (Connection conn = Database.getConnection()) {
+        try {
             // Comprova si ja existeix
             try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
                 stmt.setString(1, countryCode);
@@ -61,6 +61,7 @@ public class CountryDAO {
             return false;
         }
     }
+
 
     /**
      * Obté la llista completa de països de la base de dades.

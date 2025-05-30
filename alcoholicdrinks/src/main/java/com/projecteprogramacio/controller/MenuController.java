@@ -76,9 +76,7 @@ public class MenuController {
         menuCreateTicket.setOnAction(e -> loadView("/view/TicketCreation.fxml"));
         menuView.getItems().add(menuCreateTicket);
 
-        MenuItem menuSales = new MenuItem("Sales");
-        menuSales.setOnAction(e -> loadView("/view/SaleView.fxml"));
-        menuView.getItems().add(menuSales);
+      
 
         menuBar.getMenus().add(menuView);
         return menuBar;

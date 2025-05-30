@@ -38,7 +38,7 @@ public class UserDAO {
     public boolean createUser(User user) throws SQLException {
         String sql = "INSERT INTO users (username, password, email, created_at, last_login, last_logout, role) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPassword());
             pstmt.setString(3, user.getEmail());
@@ -53,16 +53,18 @@ public class UserDAO {
                 return false;
             }
 
-            // Obtenir l'ID generat i assignar-lo a l'objecte User
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    user.setUserId(generatedKeys.getInt(1));
+            // Obtenir l'ID generat amb consulta explícita a SQLite
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
+                if (rs.next()) {
+                    user.setUserId(rs.getInt(1));
                 }
             }
 
             return true;
         }
     }
+
 
     /**
      * Obté un usuari a partir del seu identificador únic.

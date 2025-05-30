@@ -20,6 +20,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -437,16 +438,17 @@ public class TicketController {
             Parent view = loader.load();
 
             Stage stage = (Stage) goToCreateTicketButton.getScene().getWindow();
+            Scene scene = new Scene(view); // nova escena amb el nou FXML
 
-            // Suposem que l'arrel és un BorderPane, i hi posem la vista al centre
-            BorderPane rootLayout = (BorderPane) stage.getScene().getRoot();
-            rootLayout.setCenter(view);
+            stage.setScene(scene);
+            stage.show();
 
         } catch (IOException e) {
             statusLabel.setText("Error en obrir vista de creació.");
             e.printStackTrace();
         }
     }
+
 
 }
 

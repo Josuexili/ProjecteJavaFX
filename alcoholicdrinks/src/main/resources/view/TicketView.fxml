@@ -34,16 +34,16 @@
 
         <Label text="Status:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="statusField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-        
     </GridPane>
 
     <!-- Botons per a CRUD del tiquet -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"/>
-        <Button fx:id="goToCreateTicketButton" text="Crear Tiquet Nou" onAction="#handleGoToCreateTicketButton"/>
-
+        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateTicket"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+        <Button fx:id="deleteButton" text="Delete" onAction="#handleDeleteTicket"
+                style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+        <Button fx:id="goToCreateTicketButton" text="Crear Tiquet Nou" onAction="#handleGoToCreateTicket"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
     </HBox>
 
     <!-- Etiqueta d'estat -->
@@ -71,8 +71,10 @@
         <Label text="Preu:"/>
         <TextField fx:id="priceField" prefWidth="80"/>
         
-        <Button fx:id="addLineButton" text="Afegir" onAction="#handleAddLine"/>
-        <Button fx:id="deleteLineButton" text="Eliminar" onAction="#handleDeleteLine"/>
+        <Button fx:id="addLineButton" text="Afegir" onAction="#handleAddLine"
+                style="-fx-background-color: #009688; -fx-text-fill: white;"/>
+        <Button fx:id="deleteLineButton" text="Eliminar" onAction="#handleDeleteLine"
+                style="-fx-background-color: #e91e63; -fx-text-fill: white;"/>
     </HBox>
 
 </VBox>
