@@ -27,304 +27,402 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controlador per a la vista de creació de tiquets.
+ * <p>
+ * Gestiona la selecció de clients, la cerca i selecció de productes,
+ * l'afegit de línies a un tiquet i la finalització del tiquet.
+ * També permet navegar a la vista de gestió de tiquets.
+ * <p>
+ * Aquest controlador connecta amb la base de dades mitjançant DAO i actualitza les
+ * taules i controls de la UI de manera reactiva.
+ * 
+ *  @author Josuè González
+ */
 public class CreateTicketController {
 
-	@FXML
-	private TextField clientSearchField;
-	@FXML
-	private ListView<User> clientListView;
-	@FXML
-	private Label selectedClientLabel;
+    @FXML
+    private TextField clientSearchField;
 
-	@FXML
-	private TextField productSearchField;
-	@FXML
-	private TableView<Drink> productTable;
-	@FXML
-	private TableColumn<Drink, String> colProductName;
-	@FXML
-	private TableColumn<Drink, Double> colProductPrice;
-	@FXML
-	private TableColumn<Drink, Integer> colProductQuantity;
-	@FXML
-	private TableColumn<Drink, Void> colAddButton;
+    @FXML
+    private ListView<User> clientListView;
 
-	@FXML
-	private TableView<TicketLine> ticketLineTable;
-	@FXML
-	private TableColumn<TicketLine, String> colLineProduct;
-	@FXML
-	private TableColumn<TicketLine, Integer> colLineQuantity;
-	@FXML
-	private TableColumn<TicketLine, Double> colLineUnitPrice;
-	@FXML
-	private TableColumn<TicketLine, Double> colLineSubtotal;
-	@FXML
-	private TableColumn<TicketLine, Void> colLineDeleteButton;
+    @FXML
+    private Label selectedClientLabel;
 
-	@FXML
-	private TableView<Ticket> ticketTable;
-	@FXML
-	private TableColumn<Ticket, Integer> colTicketId;
-	@FXML
-	private TableColumn<Ticket, String> colTicketStatus;
-	@FXML
-	private TableColumn<Ticket, Double> colTicketTotal;
+    @FXML
+    private TextField productSearchField;
 
-	@FXML
-	private Label totalLabel;
-	@FXML
-	private Button finishTicketButton;
+    @FXML
+    private TableView<Drink> productTable;
 
-	private final ObservableList<User> clients = FXCollections.observableArrayList();
-	private final ObservableList<Drink> products = FXCollections.observableArrayList();
-	private final ObservableList<TicketLine> ticketLines = FXCollections.observableArrayList();
-	private final ObservableList<Ticket> tickets = FXCollections.observableArrayList();
+    @FXML
+    private TableColumn<Drink, String> colProductName;
 
-	private final Map<Drink, Integer> productQuantities = new HashMap<>();
+    @FXML
+    private TableColumn<Drink, Double> colProductPrice;
 
-	private User selectedClient;
+    @FXML
+    private TableColumn<Drink, Integer> colProductQuantity;
 
-	private UserDAO userDAO;
-	private TicketDAO ticketDAO;
-	private DrinkDAO drinkDAO;
+    @FXML
+    private TableColumn<Drink, Void> colAddButton;
 
-	private static final String ESTAT_CREAT = "CREAT";
-	private static final String ESTAT_TANCAT = "TANCAT";
+    @FXML
+    private TableView<TicketLine> ticketLineTable;
 
-	public void initialize() throws SQLException {
-		connectToDatabase();
-		configurarClients();
-		configurarProductes();
-		configurarLíniesTiquet();
+    @FXML
+    private TableColumn<TicketLine, String> colLineProduct;
 
-		carregarClients();
-		carregarProductes();
-		carregarTiquets();
+    @FXML
+    private TableColumn<TicketLine, Integer> colLineQuantity;
 
-		clientSearchField.textProperty().addListener((obs, oldVal, newVal) -> buscarClients(newVal));
-		productSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
-			try {
-				buscarProductes(newVal);
-			} catch (SQLException e) {
-				mostrarError("Error cercant productes: " + e.getMessage());
-			}
-		});
-	}
+    @FXML
+    private TableColumn<TicketLine, Double> colLineUnitPrice;
 
-	private void connectToDatabase() {
-		try {
-			Connection conn = Database.getConnection();
-			userDAO = new UserDAO(conn);
-			ticketDAO = new TicketDAO(conn);
-			drinkDAO = new DrinkDAO(conn);
-		} catch (SQLException e) {
-			mostrarError("No s'ha pogut connectar a la base de dades!\n" + e.getMessage());
-		}
-	}
+    @FXML
+    private TableColumn<TicketLine, Double> colLineSubtotal;
 
-	private void configurarClients() {
-		clientListView.setItems(clients);
-		clientListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-			selectedClient = newVal;
-			selectedClientLabel
-					.setText(newVal != null ? "Client seleccionat: " + newVal.getUsername() : "Cap client seleccionat");
-		});
-	}
+    @FXML
+    private TableColumn<TicketLine, Void> colLineDeleteButton;
 
-	private void configurarProductes() {
-		colProductName.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getName()));
-		colProductPrice.setCellValueFactory(cell -> new SimpleDoubleProperty(cell.getValue().getPrice()).asObject());
+    @FXML
+    private TableView<Ticket> ticketTable;
 
-		colProductQuantity.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
-		colProductQuantity.setCellFactory(tc -> new TableCell<>() {
-			private final Spinner<Integer> spinner = new Spinner<>(1, 100, 1, 1);
+    @FXML
+    private TableColumn<Ticket, Integer> colTicketId;
 
-			{
-				spinner.setEditable(true);
-				spinner.valueProperty().addListener((obs, oldValue, newValue) -> {
-					Drink drink = getTableView().getItems().get(getIndex());
-					if (drink != null && newValue != null && newValue > 0) {
-						productQuantities.put(drink, newValue);
-					}
-				});
-			}
+    @FXML
+    private TableColumn<Ticket, String> colTicketStatus;
 
-			@Override
-			protected void updateItem(Integer quantity, boolean empty) {
-				super.updateItem(quantity, empty);
-				if (empty) {
-					setGraphic(null);
-				} else {
-					Drink drink = getTableView().getItems().get(getIndex());
-					spinner.getValueFactory().setValue(productQuantities.getOrDefault(drink, 1));
-					setGraphic(spinner);
-				}
-			}
-		});
+    @FXML
+    private TableColumn<Ticket, Double> colTicketTotal;
 
-		colAddButton.setCellFactory(col -> new TableCell<>() {
-			private final Button btn = new Button("Afegir");
+    @FXML
+    private Label totalLabel;
 
-			{
-				btn.setOnAction(e -> {
-					Drink drink = getTableView().getItems().get(getIndex());
-					int qty = productQuantities.getOrDefault(drink, 1);
-					afegirLiniaTiquet(drink, qty);
-				});
-			}
+    @FXML
+    private Button finishTicketButton;
 
-			@Override
-			protected void updateItem(Void item, boolean empty) {
-				super.updateItem(item, empty);
-				setGraphic(empty ? null : btn);
-			}
-		});
+    private final ObservableList<User> clients = FXCollections.observableArrayList();
+    private final ObservableList<Drink> products = FXCollections.observableArrayList();
+    private final ObservableList<TicketLine> ticketLines = FXCollections.observableArrayList();
+    private final ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
-		productTable.setItems(products);
-	}
+    private final Map<Drink, Integer> productQuantities = new HashMap<>();
 
-	private void configurarLíniesTiquet() {
-		colLineProduct.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getDrink().getName()));
-		colLineQuantity
-				.setCellValueFactory(cell -> new SimpleIntegerProperty(cell.getValue().getQuantity()).asObject());
-		colLineUnitPrice.setCellValueFactory(
-				cell -> new SimpleDoubleProperty(cell.getValue().getDrink().getPrice()).asObject());
-		colLineSubtotal.setCellValueFactory(cell -> new SimpleDoubleProperty(cell.getValue().getSubtotal()).asObject());
+    private User selectedClient;
 
-		colLineDeleteButton.setCellFactory(col -> new TableCell<>() {
-			private final Button btn = new Button("Eliminar");
+    private UserDAO userDAO;
+    private TicketDAO ticketDAO;
+    private DrinkDAO drinkDAO;
 
-			{
-				btn.setOnAction(e -> {
-					TicketLine line = getTableView().getItems().get(getIndex());
-					ticketLines.remove(line);
-					actualitzarTotal();
-				});
-			}
+    private static final String ESTAT_CREAT = "CREAT";
+    private static final String ESTAT_TANCAT = "TANCAT";
 
-			@Override
-			protected void updateItem(Void item, boolean empty) {
-				super.updateItem(item, empty);
-				setGraphic(empty ? null : btn);
-			}
-		});
+    /**
+     * Inicialitza el controlador.
+     * <p>
+     * Estableix la connexió a la base de dades, configura les taules i controls,
+     * i carrega les dades inicials.
+     * 
+     * @throws SQLException si hi ha algun error en la connexió o càrrega inicial
+     */
+    public void initialize() throws SQLException {
+        connectToDatabase();
+        configurarClients();
+        configurarProductes();
+        configurarLíniesTiquet();
 
-		ticketLineTable.setItems(ticketLines);
-	}
+        carregarClients();
+        carregarProductes();
+        carregarTiquets();
 
-	private void afegirLiniaTiquet(Drink drink, int quantitat) {
-		if (quantitat <= 0) {
-			mostrarAlerta(Alert.AlertType.WARNING, "La quantitat ha de ser positiva.");
-			return;
-		}
+        clientSearchField.textProperty().addListener((obs, oldVal, newVal) -> buscarClients(newVal));
+        productSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                buscarProductes(newVal);
+            } catch (SQLException e) {
+                mostrarError("Error cercant productes: " + e.getMessage());
+            }
+        });
+    }
 
-		ticketLines.stream().filter(line -> line.getDrink().equals(drink)).findFirst().ifPresentOrElse(
-				line -> line.setQuantity(line.getQuantity() + quantitat),
-				() -> ticketLines.add(new TicketLine(drink, quantitat)));
+    /**
+     * Estableix la connexió amb la base de dades i inicialitza els DAO.
+     */
+    private void connectToDatabase() {
+        try {
+            Connection conn = Database.getConnection();
+            userDAO = new UserDAO(conn);
+            ticketDAO = new TicketDAO(conn);
+            drinkDAO = new DrinkDAO(conn);
+        } catch (SQLException e) {
+            mostrarError("No s'ha pogut connectar a la base de dades!\n" + e.getMessage());
+        }
+    }
 
-		actualitzarTotal();
-		ticketLineTable.refresh();
-	}
+    /**
+     * Configura la llista de clients i el seu listener de selecció.
+     */
+    private void configurarClients() {
+        clientListView.setItems(clients);
+        clientListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            selectedClient = newVal;
+            selectedClientLabel.setText(newVal != null ? "Client seleccionat: " + newVal.getUsername() : "Cap client seleccionat");
+        });
+    }
 
-	private void actualitzarTotal() {
-		double total = ticketLines.stream().mapToDouble(TicketLine::getSubtotal).sum();
-		totalLabel.setText(String.format("Total: %.2f €", total));
-	}
+    /**
+     * Configura la taula de productes amb les columnes i els controls de quantitat i afegit.
+     */
+    private void configurarProductes() {
+        colProductName.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getName()));
+        colProductPrice.setCellValueFactory(cell -> new SimpleDoubleProperty(cell.getValue().getPrice()).asObject());
 
-	private void carregarClients() {
-		try {
-			clients.setAll(userDAO.getAllUsers());
-		} catch (SQLException e) {
-			mostrarError("Error carregant clients: " + e.getMessage());
-		}
-	}
+        colProductQuantity.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
+        colProductQuantity.setCellFactory(tc -> new TableCell<>() {
+            private final Spinner<Integer> spinner = new Spinner<>(1, 100, 1, 1);
 
-	private void carregarProductes() throws SQLException {
-		products.setAll(drinkDAO.getAllDrinks());
-	}
+            {
+                spinner.setEditable(true);
+                spinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+                    Drink drink = getTableView().getItems().get(getIndex());
+                    if (drink != null && newValue != null && newValue > 0) {
+                        productQuantities.put(drink, newValue);
+                    }
+                });
+            }
 
-	private void carregarTiquets() throws SQLException {
-		tickets.setAll(ticketDAO.getAllTickets());
-	}
+            @Override
+            protected void updateItem(Integer quantity, boolean empty) {
+                super.updateItem(quantity, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Drink drink = getTableView().getItems().get(getIndex());
+                    spinner.getValueFactory().setValue(productQuantities.getOrDefault(drink, 1));
+                    setGraphic(spinner);
+                }
+            }
+        });
 
-	private void buscarClients(String filtre) {
-		try {
-			if (filtre == null || filtre.isBlank()) {
-				clients.setAll(userDAO.getAllUsers());
-			} else {
-				clients.setAll(userDAO.searchUsersByName(filtre));
-			}
-		} catch (SQLException e) {
-			mostrarError("Error en la cerca de clients: " + e.getMessage());
-		}
-	}
+        colAddButton.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("Afegir");
 
-	private void buscarProductes(String filtre) throws SQLException {
-		if (filtre == null || filtre.isBlank()) {
-			products.setAll(drinkDAO.getAllDrinks());
-		} else {
-			products.setAll(drinkDAO.searchDrinksByName(filtre));
-		}
-	}
+            {
+                btn.setOnAction(e -> {
+                    Drink drink = getTableView().getItems().get(getIndex());
+                    int qty = productQuantities.getOrDefault(drink, 1);
+                    afegirLiniaTiquet(drink, qty);
+                });
+            }
 
-	@FXML
-	private void handleFinishTicket() {
-		if (selectedClient == null) {
-			mostrarAlerta(Alert.AlertType.WARNING, "Selecciona un client per crear el tiquet.");
-			return;
-		}
-		if (ticketLines.isEmpty()) {
-			mostrarAlerta(Alert.AlertType.WARNING, "Afegeix almenys una línia al tiquet.");
-			return;
-		}
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btn);
+            }
+        });
 
-		try {
-			Ticket ticket = new Ticket(selectedClient, ESTAT_CREAT);
-			ticketLines.forEach(ticket::addLine);
+        productTable.setItems(products);
+    }
 
-			boolean saved = ticketDAO.insertTicket(ticket);
-			if (saved) {
-				mostrarAlerta(Alert.AlertType.INFORMATION, "Tiquet creat correctament.");
-				ticketLines.clear();
-				actualitzarTotal();
-				carregarTiquets();
-			} else {
-				mostrarAlerta(Alert.AlertType.ERROR, "No s'ha pogut crear el tiquet.");
-			}
-		} catch (Exception e) {
-			mostrarError("Error creant tiquet: " + e.getMessage());
-		}
-	}
+    /**
+     * Configura la taula de línies de tiquet amb les columnes i el botó d'eliminació.
+     */
+    private void configurarLíniesTiquet() {
+        colLineProduct.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getDrink().getName()));
+        colLineQuantity.setCellValueFactory(cell -> new SimpleIntegerProperty(cell.getValue().getQuantity()).asObject());
+        colLineUnitPrice.setCellValueFactory(cell -> new SimpleDoubleProperty(cell.getValue().getDrink().getPrice()).asObject());
+        colLineSubtotal.setCellValueFactory(cell -> new SimpleDoubleProperty(cell.getValue().getSubtotal()).asObject());
 
-	@FXML
-	private void handleGoToTickets() {
-		try {
-			// Carreguem la nova escena de la pantalla de tiquets
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketView.fxml"));
-			Parent root = loader.load();
+        colLineDeleteButton.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("Eliminar");
 
-			// Obtenim la finestra actual (Stage) des de qualsevol node actual (per exemple,
-			// el botó)
-			Stage stage = (Stage) finishTicketButton.getScene().getWindow();
+            {
+                btn.setOnAction(e -> {
+                    TicketLine line = getTableView().getItems().get(getIndex());
+                    ticketLines.remove(line);
+                    actualitzarTotal();
+                });
+            }
 
-			// Assignem la nova escena
-			Scene scene = new Scene(root);
-			stage.setScene(scene);
-			stage.setTitle("Gestió de Tiquets");
-			stage.show();
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btn);
+            }
+        });
 
-		} catch (IOException e) {
-			mostrarError("No s'ha pogut carregar la pantalla de tiquets.\n" + e.getMessage());
-		}
-	}
+        ticketLineTable.setItems(ticketLines);
+    }
 
-	private void mostrarAlerta(Alert.AlertType tipus, String missatge) {
-		Alert alert = new Alert(tipus, missatge, ButtonType.OK);
-		alert.showAndWait();
-	}
+    /**
+     * Afegeix una línia al tiquet o incrementa la quantitat si ja existeix.
+     * 
+     * @param drink el producte a afegir
+     * @param quantitat la quantitat a afegir; ha de ser positiva
+     */
+    private void afegirLiniaTiquet(Drink drink, int quantitat) {
+        if (quantitat <= 0) {
+            mostrarAlerta(Alert.AlertType.WARNING, "La quantitat ha de ser positiva.");
+            return;
+        }
 
-	private void mostrarError(String missatge) {
-		mostrarAlerta(Alert.AlertType.ERROR, missatge);
-	}
+        ticketLines.stream()
+                .filter(line -> line.getDrink().equals(drink))
+                .findFirst()
+                .ifPresentOrElse(
+                    line -> line.setQuantity(line.getQuantity() + quantitat),
+                    () -> ticketLines.add(new TicketLine(drink, quantitat))
+                );
+
+        actualitzarTotal();
+        ticketLineTable.refresh();
+    }
+
+    /**
+     * Actualitza l'etiqueta amb el total calculat de totes les línies del tiquet.
+     */
+    private void actualitzarTotal() {
+        double total = ticketLines.stream().mapToDouble(TicketLine::getSubtotal).sum();
+        totalLabel.setText(String.format("Total: %.2f €", total));
+    }
+
+    /**
+     * Carrega tots els clients des de la base de dades.
+     */
+    private void carregarClients() {
+        try {
+            clients.setAll(userDAO.getAllUsers());
+        } catch (SQLException e) {
+            mostrarError("Error carregant clients: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Carrega tots els productes des de la base de dades.
+     * 
+     * @throws SQLException si hi ha un error a la base de dades
+     */
+    private void carregarProductes() throws SQLException {
+        products.setAll(drinkDAO.getAllDrinks());
+    }
+
+    /**
+     * Carrega tots els tiquets des de la base de dades.
+     * 
+     * @throws SQLException si hi ha un error a la base de dades
+     */
+    private void carregarTiquets() throws SQLException {
+        tickets.setAll(ticketDAO.getAllTickets());
+    }
+
+    /**
+     * Filtra la llista de clients segons un text de cerca.
+     * 
+     * @param filtre text pel qual filtrar els clients (nom o usuari)
+     */
+    private void buscarClients(String filtre) {
+        try {
+            if (filtre == null || filtre.isBlank()) {
+                clients.setAll(userDAO.getAllUsers());
+            } else {
+                clients.setAll(userDAO.searchUsersByName(filtre));
+            }
+        } catch (SQLException e) {
+            mostrarError("Error en la cerca de clients: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Filtra la llista de productes segons un text de cerca.
+     * 
+     * @param filtre text pel qual filtrar els productes (nom)
+     * @throws SQLException si hi ha un error a la base de dades
+     */
+    private void buscarProductes(String filtre) throws SQLException {
+        if (filtre == null || filtre.isBlank()) {
+            products.setAll(drinkDAO.getAllDrinks());
+        } else {
+            products.setAll(drinkDAO.searchDrinksByName(filtre));
+        }
+    }
+
+    /**
+     * Finalitza la creació del tiquet i l'insereix a la base de dades.
+     * <p>
+     * Comprova que hi hagi un client seleccionat i almenys una línia al tiquet.
+     * Mostra missatges d'error o confirmació segons el cas.
+     */
+    @FXML
+    private void handleFinishTicket() {
+        if (selectedClient == null) {
+            mostrarAlerta(Alert.AlertType.WARNING, "Selecciona un client per crear el tiquet.");
+            return;
+        }
+        if (ticketLines.isEmpty()) {
+            mostrarAlerta(Alert.AlertType.WARNING, "Afegeix almenys una línia al tiquet.");
+            return;
+        }
+
+        try {
+            Ticket ticket = new Ticket(selectedClient, ESTAT_CREAT);
+            ticketLines.forEach(ticket::addLine);
+
+            boolean saved = ticketDAO.insertTicket(ticket);
+            if (saved) {
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Tiquet creat correctament.");
+                ticketLines.clear();
+                actualitzarTotal();
+                carregarTiquets();
+            } else {
+                mostrarAlerta(Alert.AlertType.ERROR, "No s'ha pogut crear el tiquet.");
+            }
+        } catch (Exception e) {
+            mostrarError("Error creant tiquet: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Canvia la vista a la pantalla de gestió de tiquets.
+     * <p>
+     * Carrega la vista TicketView.fxml i la mostra en l'escenari actual.
+     */
+    @FXML
+    private void handleGoToTickets() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TicketView.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) clientSearchField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            mostrarError("No s'ha pogut carregar la vista de tiquets.");
+        }
+    }
+
+    /**
+     * Mostra un missatge d'error en un diàleg d'alerta.
+     * 
+     * @param missatge missatge d'error a mostrar
+     */
+    private void mostrarError(String missatge) {
+        mostrarAlerta(Alert.AlertType.ERROR, missatge);
+    }
+
+    /**
+     * Mostra un missatge en un diàleg d'alerta.
+     * 
+     * @param tipus el tipus d'alerta (INFO, WARNING, ERROR, etc.)
+     * @param missatge el text del missatge
+     */
+    private void mostrarAlerta(Alert.AlertType tipus, String missatge) {
+        Alert alert = new Alert(tipus);
+        alert.setTitle("Informació");
+        alert.setHeaderText(null);
+        alert.setContentText(missatge);
+        alert.showAndWait();
+    }
 }

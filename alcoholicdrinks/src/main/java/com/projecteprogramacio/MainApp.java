@@ -1,5 +1,7 @@
 package com.projecteprogramacio;
 
+import com.projecteprogramacio.controller.AppController;
+
 import javafx.application.Application;
 
 public class MainApp {

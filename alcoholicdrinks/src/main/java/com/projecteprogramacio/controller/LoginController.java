@@ -1,6 +1,5 @@
 package com.projecteprogramacio.controller;
 
-import com.projecteprogramacio.AppController;
 import com.projecteprogramacio.model.User;
 import com.projecteprogramacio.util.Database;
 import javafx.fxml.FXML;
@@ -13,18 +12,39 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+/**
+ * Controlador per gestionar la finestra de login.
+ * Permet autenticar un usuari contra la base de dades i notifica l'estat.
+ * 
+ *  @author Josuè González
+ */
 public class LoginController {
 
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label statusLabel;
+    @FXML
+    private TextField usernameField;
 
-    private AppController mainApp;  // Referència a MainApp
+    @FXML
+    private PasswordField passwordField;
 
+    @FXML
+    private Label statusLabel;
+
+    private AppController mainApp;  // Referència a l'aplicació principal
+
+    /**
+     * Assigna la referència a l'aplicació principal.
+     * 
+     * @param appController la instància principal de l'aplicació
+     */
     public void setMainApp(AppController appController) {
         this.mainApp = appController;
     }
 
+    /**
+     * Gestiona l'acció de login quan l'usuari prem el botó o fa enter.
+     * Comprova que els camps no estiguin buits, valida l'usuari i contrasenya,
+     * i si són correctes, passa l'usuari a l'aplicació principal i tanca la finestra.
+     */
     @FXML
     private void handleLogin() {
         String username = usernameField.getText().trim();

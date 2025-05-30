@@ -15,6 +15,8 @@ import java.util.List;
 /**
  * Controlador JavaFX per a la gestió d’usuaris.
  * Aquesta classe s’encarrega de mostrar la taula d’usuaris, i de gestionar les accions de crear, actualitzar i eliminar usuaris.
+ * 
+ *  @author Josuè González
  */
 public class UserController {
 
